@@ -1,0 +1,51 @@
+ 
+import express from "express";
+import dotenv from "dotenv";
+import cors from "cors";
+import userRouter from "./router/user-router";
+import studentRouter from "./router/student-router";
+import teacherRouter from "./router/teacher-router";
+import resultRouter from "./router/result-router";
+import attendanceRouter from "./router/attendece-router";
+import cashierRouter from "./router/casheir-router";
+import classroomRouter from "./router/ckassroom-router";
+import dashboardRouter from "./router/dashboud-router";
+import issueRouter from "./router/essue-router";
+import examRouter from "./router/exam-router";
+import subjectRouter from "./router/subject-router";
+import timetableRouter from "./router/timetable-router";
+import settingsRouter from "./router/settings-router";
+
+const app = express();
+
+dotenv.config();
+ 
+app.use(express.json());
+const PORT = 8000;
+
+app.use(cors());
+app.use("/api/user", userRouter);
+app.use("/api/auth", userRouter);
+app.use("/api/student", studentRouter);
+app.use("/api/students", studentRouter);
+app.use("/api/teacher", teacherRouter);
+app.use("/api/result", resultRouter);
+app.use("/api/attendance", attendanceRouter);
+app.use("/api/cashier", cashierRouter);
+app.use("/api/classroom", classroomRouter);
+app.use("/api/dashboard", dashboardRouter);
+app.use("/api/issue", issueRouter);
+app.use("/api/exam", examRouter);
+app.use("/api/subject", subjectRouter);
+app.use("/api/timetable", timetableRouter);
+app.use("/api/settings", settingsRouter);
+   
+// app.get("/api", (req, res) => {
+//   res.json("Hello server");
+// });
+ 
+app.get("/api", (_req, res) => {
+  res.json({ message: "Server is running" });
+});
+
+app.listen(PORT, () => console.log(`server is running ${PORT}`));

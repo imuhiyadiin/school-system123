@@ -1,0 +1,11 @@
+import { Router } from "express";
+import { createStudent, deleteStudent, getStudent, getStudents, studentLogin, updateStudent } from "../controller/student-controller";
+import { requireOwnStudent, requireStudent, verifyToken } from "../middelwere/auth";
+const router = Router();
+router.post("/", createStudent); 
+router.post("/login", studentLogin);
+router.get("/", getStudents);
+ router.get("/:id", verifyToken, requireStudent, requireOwnStudent, getStudent); 
+ router.patch("/:id", updateStudent); 
+ router.delete("/:id", deleteStudent);
+export default router;

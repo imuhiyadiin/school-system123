@@ -1,0 +1,8 @@
+import { Request, Response } from "express"
+import prisma from "../lip/prisma"
+
+export const createCashier = async (req: Request, res: Response) => { try { const { userId, fullName } = req.body; if (!userId || !fullName) return res.status(400).json({ message: "userId and fullName are required" }); res.status(201).json(await prisma.cashier.create({ data: { userId, fullName } })) } catch { res.status(500).json({ message: "Failed to create cashier" }) } }
+export const getCashiers = async (_req: Request, res: Response) => { try { res.json(await prisma.cashier.findMany({ include: { user: { select: { id: true, email: true, username: true } } } })) } catch { res.status(500).json({ message: "Failed to get cashiers" }) } }
+export const getCashier = async (req: Request, res: Response) => { try { const cashier = await prisma.cashier.findUnique({ where: { id: String(req.params.id) } }); if (!cashier) return res.status(404).json({ message: "Cashier not found" }); res.json(cashier) } catch { res.status(500).json({ message: "Failed to get cashier" }) } }
+export const updateCashier = async (req: Request, res: Response) => { try { res.json(await prisma.cashier.update({ where: { id: String(req.params.id) }, data: { fullName: req.body.fullName } })) } catch { res.status(500).json({ message: "Failed to update cashier" }) } }
+export const deleteCashier = async (req: Request, res: Response) => { try { await prisma.cashier.delete({ where: { id: String(req.params.id) } }); res.json({ message: "Cashier deleted successfully" }) } catch { res.status(500).json({ message: "Failed to delete cashier" }) } }
