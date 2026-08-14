@@ -17,6 +17,7 @@ enum Role {
   ADMIN
   TEACHER
   STUDENT
+  CASHIER
 
   User
 }
@@ -82,7 +83,7 @@ model Cashier {
 
 model Student {
   id              String @id @default(cuid())
-
+  studentID       String? @unique
   userId          String @unique
   user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -99,6 +100,7 @@ model Student {
   attendances     Attendance[]
   results         Result[]
   issues          Issue[]
+  payments        Payment[]
 }
 
 model Classroom {
@@ -115,6 +117,7 @@ model Classroom {
   timetable   Timetable[]
   results     Result[]
   issues      Issue[]
+  attendances Attendance[]
 }
 
 model ClassroomStudent {
@@ -135,6 +138,7 @@ model Subject {
   description   String?
 
   results       Result[]
+  exams         Exam[]
 }
 
 model Exam {
@@ -143,7 +147,9 @@ model Exam {
   name        String
   date        DateTime
   type        ExamType
-
+  subjectId   String?
+  subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  total       Int     @default(100)
   results     Result[]
 }
 
@@ -171,7 +177,10 @@ model Attendance {
   student     Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   date        DateTime
-  status      Boolean
+  status      String   @default("PRESENT")
+  remark      String?
+  classroomId String?
+  classroom   Classroom? @relation(fields: [classroomId], references: [id], onDelete: SetNull)
 }
 
 model Timetable {
@@ -205,4 +214,26 @@ model Setting {
   schoolName String? 
   timezone   String?
   updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  paymentDate DateTime
+  paymentMode String
+  amount      Float
+  reference   String?
+  note        String?
+  createdAt   DateTime @default(now())
+}
+
+model Fee {
+  id          String   @id @default(cuid())
+  name        String
+  amount      Float
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

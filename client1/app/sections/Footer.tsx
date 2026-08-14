@@ -1,7 +1,14 @@
+"use client"
+
 import { BookOpen, Mail, MapPin, Phone } from "lucide-react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 export default function Footer() {
+  const pathname = usePathname()
+
+  if (pathname.startsWith("/dashboud")) return null
+
   return (
     <footer className="border-t border-slate-200 bg-slate-950 text-slate-300">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-2 lg:grid-cols-[1.4fr_0.8fr_1fr] lg:px-8">

@@ -9,10 +9,12 @@ export const createExam = async (req: Request, res: Response) => {
       name,
       date,
       type,
+      subjectId,
+      total,
     } = req.body;
 
 
-    if (!name || !date || !type) {
+    if (!name || !date || !type || !subjectId || !Number.isInteger(Number(total)) || Number(total) <= 0) {
       return res.status(400).json({
         message: "Fill required data",
       });
@@ -24,6 +26,8 @@ export const createExam = async (req: Request, res: Response) => {
         name,
         date: new Date(date),
         type,
+        subjectId,
+        total: Number(total),
       },
     });
 
@@ -50,8 +54,10 @@ export const getExams = async (req: Request, res: Response) => {
   try {
 
     const exams = await prisma.exam.findMany({
+      orderBy: { id: "desc" },
       include: {
         results: true,
+        subject: true,
       },
     });
 
@@ -85,6 +91,7 @@ export const getExam = async (req: Request, res: Response) => {
       },
 
       include: {
+        subject: true,
         results: {
           include: {
             student: true,
@@ -130,6 +137,8 @@ export const updateExam = async (req: Request, res: Response) => {
       name,
       date,
       type,
+      subjectId,
+      total,
     } = req.body;
 
 
@@ -157,6 +166,8 @@ export const updateExam = async (req: Request, res: Response) => {
         name,
         date: date ? new Date(date) : undefined,
         type,
+        ...(subjectId !== undefined ? { subjectId } : {}),
+        ...(total !== undefined ? { total: Number(total) } : {}),
       },
 
     });

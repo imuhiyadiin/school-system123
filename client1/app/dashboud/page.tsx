@@ -42,7 +42,7 @@ const adminNavigation = [
   { label: "Results", icon: FileText, href: "/dashboud/results" },
   { label: "Attendance", icon: CheckCircle2, href: "/dashboud/attendance" },
   { label: "Timetable", icon: CalendarDays, href: "/dashboud/timetable" },
-  { label: "Cashier", icon: Users, href: "/dashboud/cashier" },
+  { label: "Fees", icon: Users, href: "/dashboud/fees" },
   { label: "Issues", icon: ShieldAlert, href: "/dashboud/issues" },
   { label: "Users", icon: Users, href: "/dashboud/users" },
 ]

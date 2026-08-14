@@ -14,7 +14,7 @@ type Student = {
 }
 
 type Subject = { id: string; name: string; grade: number; description?: string | null }
-type Result = { id: string; marks: number; schoolYear?: string | null; subject?: { name: string }; exam?: { id: string; name: string; type: string; date?: string } }
+type Result = { id: string; marks: number; schoolYear?: string | null; subject?: { name: string }; exam?: { id: string; name: string; type: string; date?: string; total?: number } }
 type Issue = { id: string; type: string; details: string; isResolved: boolean }
 
 const fallbackStudent: Student = {
@@ -76,6 +76,10 @@ export default function ResultStudentPage() {
   const yearResults = activeYear ? results.filter((result) => resultYear(result) === activeYear) : results
   const availableExamTypes = ["MONTHLY", "MIDTERM", "FINAL"].filter((type) => yearResults.some((result) => result.exam?.type === type))
   const filteredResults = selectedExamType === "all" ? yearResults : yearResults.filter((result) => result.exam?.type === selectedExamType)
+  const totalMarks = filteredResults.reduce((sum, result) => sum + result.marks, 0)
+  const totalPossibleMarks = filteredResults.reduce((sum, result) => sum + (result.exam?.total ?? 100), 0)
+  const passedResults = filteredResults.filter((result) => result.marks >= (result.exam?.total ?? 100) / 2)
+  const failedResults = filteredResults.filter((result) => result.marks < (result.exam?.total ?? 100) / 2)
 
   return (
     <main className="min-h-svh overflow-hidden bg-[#f8fbff] text-slate-800">
@@ -119,12 +123,21 @@ export default function ResultStudentPage() {
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><Trophy className="h-5 w-5" /></span>
                     <h2 className="text-lg font-bold text-slate-900">My Results</h2>
                   </div>
-                  <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">{filteredResults.length}</span>
+                  <span className="rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">{filteredResults.length} Subjects</span>
                 </div>
                 {!isLoading && results.length ? <div className="mb-4 grid gap-3 sm:grid-cols-2"><label className="block text-xs font-bold text-slate-600">School year<select value={activeYear} onChange={(event) => { setSelectedYear(event.target.value); setSelectedExamType("all") }} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500">{resultYears.map((year) => <option key={year} value={year}>{year}</option>)}</select></label><label className="block text-xs font-bold text-slate-600">Exam type<select value={selectedExamType} onChange={(event) => setSelectedExamType(event.target.value)} className="mt-1.5 h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-700 outline-none focus:border-blue-500"><option value="all">All exams</option>{availableExamTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label></div> : null}
               {isLoading ? <LoadingRows /> : filteredResults.length ? (
-                <div className="space-y-3">
-                  {filteredResults.map((result) => <div key={result.id} className="flex items-center justify-between rounded-2xl bg-blue-50 px-4 py-3"><div><p className="font-bold text-slate-800">{result.exam?.name ?? "Exam"}</p><p className="mt-1 text-xs text-slate-500">{result.exam?.type ?? "Exam"}</p></div><span className="rounded-xl bg-blue-700 px-3 py-1.5 text-sm font-bold text-white">{result.marks}%</span></div>)}
+                <div className="space-y-5">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl bg-blue-50 px-4 py-3"><p className="text-xs font-bold uppercase tracking-wide text-blue-600">Total subjects</p><p className="mt-1 text-2xl font-bold text-slate-900">{filteredResults.length}</p></div>
+                    <div className="rounded-2xl bg-emerald-50 px-4 py-3"><p className="text-xs font-bold uppercase tracking-wide text-emerald-600">Total score</p><p className="mt-1 text-2xl font-bold text-slate-900">{totalMarks} <span className="text-base text-slate-500">/ {totalPossibleMarks}</span></p></div>
+                  </div>
+
+                  {passedResults.length ? <div className="space-y-3">
+                    {passedResults.map((result) => <ResultRow key={result.id} result={result} />)}
+                  </div> : null}
+
+                  {failedResults.length ? <div className="border-t border-slate-200 pt-5"><div className="mb-3 flex items-center justify-between"><h3 className="font-bold text-rose-700">Failed subjects</h3><span className="rounded-lg bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700">{failedResults.length}</span></div><div className="space-y-3">{failedResults.map((result) => <ResultRow key={result.id} result={result} failed />)}</div></div> : null}
                 </div>
               ) : <EmptyData text="No results are available for this selection." />}
               </div>
@@ -157,6 +170,21 @@ function DataSection({ icon: Icon, title, count, children }: { icon: typeof Book
 
 function EmptyData({ text }: { text: string }) {
   return <p className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">{text}</p>
+}
+
+function ResultRow({ result, failed = false }: { result: Result; failed?: boolean }) {
+  const examTotal = result.exam?.total ?? 100
+
+  return <div className={`flex items-center justify-between rounded-2xl px-4 py-3 ${failed ? "bg-rose-50" : "bg-blue-50"}`}>
+    <div>
+      <p className="font-bold text-slate-800">{result.subject?.name ?? "Subject"}</p>
+      <p className="mt-1 text-xs text-slate-500">{result.exam?.type ?? result.exam?.name ?? "Exam"}</p>
+    </div>
+    <div className="text-right">
+      <span className={`inline-block rounded-xl px-3 py-1.5 text-sm font-bold text-white ${failed ? "bg-rose-600" : "bg-blue-700"}`}>{result.marks} / {examTotal}</span>
+      <p className={`mt-1 text-xs font-semibold ${failed ? "text-rose-600" : "text-emerald-600"}`}>{failed ? "Failed" : "Passed"}</p>
+    </div>
+  </div>
 }
 
 function LoadingRows() {

@@ -55,6 +55,7 @@ export const getIssues = async (
             },
           }
         : {},
+      orderBy: { id: "desc" },
       include: {
         student: true,
         classroom: true,

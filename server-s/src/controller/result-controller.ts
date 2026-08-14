@@ -43,18 +43,22 @@ export const createResult = async (req: Request, res: Response) => {
       where: { id: classId },
       select: { grade: true },
     });
-    let defaultSubject = subjectId ? null : await prisma.subject.findFirst({
+    const selectedExam = await prisma.exam.findUnique({
+      where: { id: resultExamId },
+      select: { subjectId: true },
+    });
+    let defaultSubject = subjectId || selectedExam?.subjectId ? null : await prisma.subject.findFirst({
       where: classroom ? { grade: classroom.grade } : undefined,
       orderBy: { name: "asc" },
     });
 
-    if (!subjectId && !defaultSubject) {
+    if (!subjectId && !selectedExam?.subjectId && !defaultSubject) {
       defaultSubject = await prisma.subject.findFirst({
         orderBy: { name: "asc" },
       });
     }
 
-    if (!subjectId && !defaultSubject) {
+    if (!subjectId && !selectedExam?.subjectId && !defaultSubject) {
       defaultSubject = await prisma.subject.create({
         data: {
           name: "General Subject",
@@ -68,7 +72,7 @@ export const createResult = async (req: Request, res: Response) => {
       data: {
         studentId,
         classId,
-        subjectId: subjectId ?? defaultSubject!.id,
+        subjectId: subjectId ?? selectedExam?.subjectId ?? defaultSubject!.id,
         examId: resultExamId,
         schoolYear,
         marks,
@@ -92,6 +96,7 @@ export const createResult = async (req: Request, res: Response) => {
 export const getResults = async (_req: Request, res: Response) => {
   try {
     const results = await prisma.result.findMany({
+      orderBy: { id: "desc" },
       include: resultInclude,
     });
 
@@ -214,6 +219,7 @@ export const studentResults = async (req: Request, res: Response) => {
       where: {
         studentId: String(req.params.studentId),
       },
+      orderBy: { id: "desc" },
       include: resultInclude,
     });
 
@@ -233,6 +239,7 @@ export const classResults = async (req: Request, res: Response) => {
       where: {
         classId: String(req.params.classId),
       },
+      orderBy: { id: "desc" },
       include: resultInclude,
     });
 

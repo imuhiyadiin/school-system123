@@ -1,12 +1,16 @@
 import prisma from "../lip/prisma";
 import { Request, Response } from "express";
 
+const dayRange = (value: string) => { const start = new Date(`${value.slice(0, 10)}T00:00:00.000Z`); const end = new Date(start); end.setUTCDate(end.getUTCDate() + 1); return { start, end }; };
+
 export const createAttendance = async (req: Request, res: Response) => {
   try {
     const {
       studentId,
       date,
       status,
+      remark,
+      classroomId,
     } = req.body;
 
 
@@ -21,7 +25,9 @@ export const createAttendance = async (req: Request, res: Response) => {
       data: {
         studentId,
         date: new Date(date),
-        status,
+        status: typeof status === "string" ? status : status ? "PRESENT" : "ABSENT",
+        remark: remark || null,
+        classroomId: classroomId || null,
       },
       include: {
         student: true,
@@ -45,6 +51,14 @@ export const createAttendance = async (req: Request, res: Response) => {
 };
 
 export const markAttendance = createAttendance;
+
+export const getClassroomAttendance = async (req: Request, res: Response) => {
+  try { const classroomId = String(req.params.classroomId); const { start, end } = dayRange(String(req.query.date ?? new Date().toISOString().slice(0, 10))); const [classroom, attendance] = await Promise.all([prisma.classroom.findUnique({ where: { id: classroomId }, include: { teacher: { select: { fullName: true } }, students: { include: { student: true } } } }), prisma.attendance.findMany({ where: { classroomId, date: { gte: start, lt: end } } })]); if (!classroom) return res.status(404).json({ message: "Classroom not found" }); res.json({ classroom, attendance }); } catch { res.status(500).json({ message: "Failed to load classroom attendance" }); }
+};
+
+export const saveClassroomAttendance = async (req: Request, res: Response) => {
+  try { const { classroomId, date, records } = req.body as { classroomId?: string; date?: string; records?: Array<{ studentId: string; status: string; remark?: string }> }; if (!classroomId || !date || !Array.isArray(records) || !records.length) return res.status(400).json({ message: "Classroom, date and attendance records are required" }); const valid = new Set(["PRESENT", "ABSENT", "HALF_DAY"]); if (records.some((record) => !record.studentId || !valid.has(record.status))) return res.status(400).json({ message: "Invalid attendance record" }); const { start, end } = dayRange(date); await prisma.$transaction([prisma.attendance.deleteMany({ where: { classroomId, date: { gte: start, lt: end } } }), prisma.attendance.createMany({ data: records.map((record) => ({ studentId: record.studentId, classroomId, date: start, status: record.status, remark: record.remark || null })) })]); res.json({ message: "Attendance saved successfully" }); } catch { res.status(500).json({ message: "Failed to save attendance" }); }
+};
 
 
 export const getAttendance = async (req: Request, res: Response) => {
@@ -124,7 +138,7 @@ export const updateAttendance = async (req: Request, res: Response) => {
 
       data:{
         date: date ? new Date(date) : undefined,
-        status,
+        ...(status !== undefined ? { status: typeof status === "string" ? status : status ? "PRESENT" : "ABSENT" } : {}),
       },
 
       include:{

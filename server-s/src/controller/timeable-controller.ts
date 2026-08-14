@@ -16,7 +16,7 @@ export const createTimetable = async (req: Request, res: Response) => {
 
 export const getTimetables = async (req: Request, res: Response) => {
   try {
-    const timetables = await prisma.timetable.findMany();
+    const timetables = await prisma.timetable.findMany({ orderBy: { id: "desc" } });
 
     res.status(200).json(timetables);
   } catch (error) {

@@ -15,6 +15,7 @@ import examRouter from "./router/exam-router";
 import subjectRouter from "./router/subject-router";
 import timetableRouter from "./router/timetable-router";
 import settingsRouter from "./router/settings-router";
+import feeRouter from "./router/fee-router";
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use("/api/exam", examRouter);
 app.use("/api/subject", subjectRouter);
 app.use("/api/timetable", timetableRouter);
 app.use("/api/settings", settingsRouter);
+app.use("/api/fees", feeRouter);
    
 // app.get("/api", (req, res) => {
 //   res.json("Hello server");

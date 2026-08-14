@@ -61,7 +61,8 @@ const Header = () => {
   }
 
   return (
-    <header className="sticky top-0 z-50 rounded-b-2xl border border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/85 dark:shadow-black/20">
+    <>
+    <header className="fixed inset-x-0 top-0 z-50 rounded-b-2xl border border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/85 dark:shadow-black/20">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
@@ -73,10 +74,10 @@ const Header = () => {
           </span>
           <span className="hidden sm:block">
             <span className="block text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-              Creative Readers
+              abu-huraira
             </span>
             <span className="block text-xs font-medium text-emerald-600">
-              Digital Solutions
+             school-exam
             </span>
           </span>
         </Link>
@@ -152,6 +153,8 @@ const Header = () => {
         </div>
       )}
     </header>
+    <div aria-hidden="true" className="h-16" />
+    </>
   )
 }
 

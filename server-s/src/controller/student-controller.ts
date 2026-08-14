@@ -14,6 +14,7 @@ export const createStudent = async (req: Request, res: Response) => {
       parentName,
       password,
       classroomId,
+      studentID,
     } = req.body;
 
     if (
@@ -24,18 +25,26 @@ export const createStudent = async (req: Request, res: Response) => {
       !gender ||
       !dob ||
       !password ||
-      !classroomId
+      !classroomId ||
+      !studentID
     ) {
       return res.status(400).json({
         message: "Complete student data",
       });
     }
 
+    const studentId = typeof studentID === "string" ? studentID.trim() : "";
+    if (!studentId) return res.status(400).json({ message: "Student ID is required" });
+
+    const existingStudentId = await prisma.student.findUnique({ where: { studentID: studentId } });
+    if (existingStudentId) return res.status(409).json({ message: "Student ID already exists. Please choose a unique ID." });
+
     const hash = hashpass.hashSync(password, 10);
     const studentIdentity = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     const student = await prisma.student.create({
       data: {
+        studentID: studentId,
         fullName,
         password: hash,
         gender,
@@ -150,13 +159,14 @@ export const studentLogin = async (
 
 export const getStudents = async (_req: Request, res: Response) => {
   try {
-    res.json({
-      result: await prisma.student.findMany({
+    const students = await prisma.student.findMany({
+        orderBy: { admissionDate: "desc" },
         include: {
           user: {
             select: {
               id: true,
               email: true,
+              username: true,
             },
           },
           classrooms: {
@@ -165,8 +175,8 @@ export const getStudents = async (_req: Request, res: Response) => {
             },
           },
         },
-      }),
-    });
+      });
+    res.json({ result: students.map(({ user, ...student }) => ({ ...student, studentID: student.studentID, user })) });
   } catch {
     res.status(500).json({
       message: "Failed to get students",
@@ -188,10 +198,11 @@ export const getStudent = async (req: Request, res: Response) => {
       },
 
       include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
+          user: {
+            select: {
+              id: true,
+              email: true,
+              username: true,
           },
         },
 
@@ -210,12 +221,34 @@ export const getStudent = async (req: Request, res: Response) => {
       });
     }
 
-    res.json({ student });
+    res.json({ student: { ...student, studentID: student.studentID } });
 
   } catch {
     res.status(500).json({
       message: "Failed to get student",
     });
+  }
+};
+
+export const getStudentOverview = async (req: Request, res: Response) => {
+  try {
+    const studentId = String(req.params.id);
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      select: {
+        payments: { orderBy: { paymentDate: "desc" } },
+        attendances: { orderBy: { date: "asc" } },
+        results: {
+          orderBy: { id: "desc" },
+          include: { subject: true, exam: true },
+        },
+      },
+    });
+
+    if (!student) return res.status(404).json({ message: "Student not found" });
+    return res.json(student);
+  } catch {
+    return res.status(500).json({ message: "Failed to get student overview" });
   }
 };
 
@@ -229,9 +262,10 @@ export const updateStudent = async (req: Request, res: Response) => {
       dob,
       phone,
       address,
-      parentName,
+          parentName,
           password,
           classroomId,
+          studentID,
     } = req.body;
 
 
@@ -260,6 +294,12 @@ export const updateStudent = async (req: Request, res: Response) => {
 
           ...(parentName !== undefined
             ? { parentName }
+            : {}),
+
+          ...(studentID !== undefined
+            ? {
+                studentID: String(studentID).trim(),
+              }
             : {}),
 
           ...(password

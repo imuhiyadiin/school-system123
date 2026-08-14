@@ -80,6 +80,7 @@ export const getTeachers = async (
 ) => {
   try {
     const result = await prisma.teacher.findMany({
+      orderBy: { joinedAt: "desc" },
       include: {
         user: {
           select: {
