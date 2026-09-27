@@ -49,11 +49,7 @@ export const getIssues = async (
   try {
     const issues = await prisma.issue.findMany({
       where: req.user?.role === "STUDENT"
-        ? {
-            student: {
-              userId: req.user.id,
-            },
-          }
+        ? { studentId: req.user.id }
         : {},
       orderBy: { id: "desc" },
       include: {

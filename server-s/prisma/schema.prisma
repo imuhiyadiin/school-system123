@@ -26,7 +26,13 @@ enum ExamType {
   QUIZ
   MONTHLY
   MIDTERM
+  THIRD
   FINAL
+}
+
+enum PayrollStatus {
+  PENDING
+  PAID
 }
 
 model User {
@@ -35,9 +41,9 @@ model User {
   username    String   @unique
   password    String
   role        Role
+  permissions String[] @default([])
   isActive    Boolean  @default(true)
 
-  student      Student?
   teacher      Teacher?
   admin        Admin?
   cashier      Cashier?
@@ -69,7 +75,62 @@ model Teacher {
   address     String?
   joinedAt    DateTime @default(now())
   password    String
+  basicSalary Float    @default(0)
+  allowance   Float    @default(0)
+  subjectId   String?
+  subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  arrivalTime String?
   classrooms  Classroom[]
+  payrolls    Payroll[]
+  attendances TeacherAttendance[]
+}
+
+model employee {
+  id            String   @id @default(cuid())
+  employeeId    String   @unique
+  fullName      String
+  email         String   @unique
+  phone         String?
+  gender        String?
+  dob           DateTime?
+  address       String?
+  position      String
+  department    String
+  joinedAt      DateTime @default(now())
+  basicSalary   Float    @default(0)
+  allowance     Float    @default(0)
+  status        String   @default("ACTIVE")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  payrolls      Payroll[]
+
+  @@map("Staff")
+}
+
+
+model Payroll {
+  id            String        @id @default(cuid())
+  teacherId     String?
+  teacher       Teacher?      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  staffId       String?
+  staff         employee?        @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  month         Int
+  year          Int
+  basicSalary   Float
+  allowance     Float         @default(0)
+  deduction     Float         @default(0)
+  advance       Float         @default(0)
+  netSalary     Float
+  status        PayrollStatus @default(PENDING)
+  paymentDate   DateTime?
+  paymentMethod String?
+  note          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([teacherId, month, year])
+  @@unique([staffId, month, year])
+  @@index([month, year])
 }
 
 model Cashier {
@@ -84,8 +145,6 @@ model Cashier {
 model Student {
   id              String @id @default(cuid())
   studentID       String? @unique
-  userId          String @unique
-  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   fullName        String
   password         String
@@ -94,6 +153,10 @@ model Student {
   phone           String?
   address         String?
   parentName      String?
+  parentPhone     String?
+  totalFee        Float    @default(0)
+  busId           String?
+  bus             Bus?     @relation(fields: [busId], references: [id], onDelete: SetNull)
   admissionDate   DateTime @default(now())
 
   classrooms      ClassroomStudent[]
@@ -139,6 +202,7 @@ model Subject {
 
   results       Result[]
   exams         Exam[]
+  teachers      Teacher[]
 }
 
 model Exam {
@@ -150,6 +214,7 @@ model Exam {
   subjectId   String?
   subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   total       Int     @default(100)
+  minMarks    Int     @default(33)
   results     Result[]
 }
 
@@ -181,6 +246,20 @@ model Attendance {
   remark      String?
   classroomId String?
   classroom   Classroom? @relation(fields: [classroomId], references: [id], onDelete: SetNull)
+}
+
+model TeacherAttendance {
+  id        String   @id @default(cuid())
+  teacherId String
+  teacher   Teacher  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  date      DateTime
+  status    String   @default("PRESENT")
+  remark    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([teacherId, date])
+  @@index([date])
 }
 
 model Timetable {
@@ -236,4 +315,16 @@ model Fee {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Bus {
+  id           String   @id @default(cuid())
+  fullName     String
+  phone        String
+  vehiclePlate String?
+  location     String
+  arrivalTime  String?
+  students     Student[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

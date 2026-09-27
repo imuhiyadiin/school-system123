@@ -1,23 +1,135 @@
 "use client"
 
-import { BookOpen, CheckCircle2, ClipboardList, FileText, GraduationCap, House, LayoutDashboard, Settings, ShieldAlert, Users, UsersRound, CalendarDays, LogOut, ChevronUp, Moon, Sun } from "lucide-react"
+import {
+  BookOpen,
+  CheckCircle2,
+  ClipboardList,
+  FileText,
+  GraduationCap,
+  House,
+  LayoutDashboard,
+  ShieldAlert,
+  Users,
+  UsersRound,
+  PanelLeft,
+  Search,
+  ContactRound,
+  Bus,
+} from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useDispatch, useSelector } from "react-redux"
+import { useState } from "react"
 import type { AppDispatch, RootState } from "@/lib/store"
 import { clearAuth } from "@/services/auth/authSlice"
 import { clearStudentDashboard } from "@/services/dashboard/dashboardSlice"
+import { Button } from "@/components/ui/button"
+import { MobileScrollTop, Sidebar } from "./sidebar/Sidebar"
 
 const adminNavigation = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboud" }, { label: "Students", icon: GraduationCap, href: "/dashboud/students" }, { label: "Teachers", icon: UsersRound, href: "/dashboud/teachers" }, { label: "Classrooms", icon: House, href: "/dashboud/classrooms" }, { label: "Subjects", icon: BookOpen, href: "/dashboud/subjects" }, { label: "Exams", icon: ClipboardList, href: "/dashboud/exams" }, { label: "Results", icon: FileText, href: "/dashboud/results" }, { label: "Attendance", icon: CheckCircle2, href: "/dashboud/attendance" }, { label: "Timetable", icon: CalendarDays, href: "/dashboud/timetable" }, { label: "Fees", icon: Users, href: "/dashboud/fees" }, { label: "Issues", icon: ShieldAlert, href: "/dashboud/issues" }, { label: "Users", icon: Users, href: "/dashboud/users" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboud" },
+  { label: "Students", icon: GraduationCap, href: "/dashboud/students" },
+  { label: "Teachers", icon: UsersRound, href: "/dashboud/teachers" },
+  { label: "Classrooms", icon: House, href: "/dashboud/classrooms" },
+  { label: "Subjects", icon: BookOpen, href: "/dashboud/subjects" },
+  { label: "Exams", icon: ClipboardList, href: "/dashboud/exams" },
+  { label: "Results", icon: FileText, href: "/dashboud/results" },
+  { label: "Attendance", icon: CheckCircle2, href: "/dashboud/attendance" },
+  { label: "Buses", icon: Bus, href: "/dashboud/buses" },
+  { label: "Fees", icon: Users, href: "/dashboud/fees", account: true },
+  {
+    label: "Employee Staff",
+    icon: ContactRound,
+    href: "/dashboud/staff",
+  },
+  { label: "Issues", icon: ShieldAlert, href: "/dashboud/issues" },
+  { label: "Users", icon: Users, href: "/dashboud/users" },
 ]
-const studentNavigation = [{ label: "Dashboard", icon: LayoutDashboard, href: "/dashboud" }, { label: "Profile", icon: GraduationCap, href: "/dashboud/profile" }, { label: "Subjects", icon: BookOpen, href: "/dashboud/subjects" }, { label: "Exam Routine", icon: ClipboardList, href: "/dashboud/exam-routine" }, { label: "Results", icon: FileText, href: "/dashboud/results" }, { label: "Attendance", icon: CheckCircle2, href: "/dashboud/attendance" }]
-const teacherNavigation = [{ label: "Exams", icon: ClipboardList, href: "/dashboud/exams" }, { label: "Exam Results", icon: FileText, href: "/dashboud/results" }, { label: "Attendance", icon: CheckCircle2, href: "/dashboud/attendance" }]
+const studentNavigation = [
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboud" },
+  { label: "Profile", icon: GraduationCap, href: "/dashboud/profile" },
+  { label: "Subjects", icon: BookOpen, href: "/dashboud/subjects" },
+  {
+    label: "Exam Routine",
+    icon: ClipboardList,
+    href: "/dashboud/exam-routine",
+  },
+  { label: "Results", icon: FileText, href: "/dashboud/results" },
+  { label: "Attendance", icon: CheckCircle2, href: "/dashboud/attendance" },
+]
+const teacherNavigation = [
+  { label: "Exams", icon: ClipboardList, href: "/dashboud/exams" },
+  { label: "Exam Results", icon: FileText, href: "/dashboud/results" },
+  { label: "Attendance", icon: CheckCircle2, href: "/dashboud/attendance" },
+]
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname(); const router = useRouter(); const dispatch = useDispatch<AppDispatch>(); const { user } = useSelector((state: RootState) => state.auth); const { resolvedTheme, setTheme } = useTheme()
+  const pathname = usePathname()
+  const router = useRouter()
+  const dispatch = useDispatch<AppDispatch>()
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const { user } = useSelector((state: RootState) => state.auth)
+  const { resolvedTheme, setTheme } = useTheme()
   if (pathname === "/dashboud") return <>{children}</>
-  const navigation = user?.role === "ADMIN" ? adminNavigation : user?.role === "TEACHER" ? teacherNavigation : studentNavigation
-  const logout = () => { dispatch(clearStudentDashboard()); dispatch(clearAuth()); router.replace("/singIn") }
-  return <main className="dashboard-theme min-h-svh bg-slate-50 text-slate-900"><aside className="fixed inset-y-0 left-0 z-30 flex w-16 flex-col overflow-y-auto border-r border-slate-200 bg-white px-2 py-5 sm:w-64 sm:px-4"><div className="flex items-center gap-3 px-1 sm:px-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 text-white shadow-lg shadow-blue-500/25"><BookOpen className="h-5 w-5" /></div><div className="hidden sm:block"><p className="text-sm font-bold leading-tight">Creative Readers</p><p className="text-xs text-slate-500">School Management</p></div></div><nav className="mt-8 flex-1 space-y-1"><p className="hidden px-3 pb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 sm:block">Main menu</p>{navigation.map((item) => { const Icon = item.icon; const active = pathname === item.href; return <button key={item.label} onClick={() => router.push(item.href)} className={`flex w-full justify-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition sm:justify-start ${active ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md shadow-blue-500/20" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}><Icon className="h-4.5 w-4.5 shrink-0" /><span className="hidden sm:inline">{item.label}</span></button> })}<div className="pt-5"><p className="hidden px-3 pb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 sm:block">Account</p><button type="button" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")} className="flex w-full justify-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-blue-50 hover:text-blue-700 sm:justify-start">{resolvedTheme === "dark" ? <Sun className="h-4.5 w-4.5 shrink-0" /> : <Moon className="h-4.5 w-4.5 shrink-0" />}<span className="hidden sm:inline">{resolvedTheme === "dark" ? "Light mode" : "Dark mode"}</span></button><button onClick={() => router.push("/dashboud/settings")} className="flex w-full justify-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-blue-50 hover:text-blue-700 sm:justify-start"><Settings className="h-4.5 w-4.5 shrink-0" /><span className="hidden sm:inline">Settings</span></button><button onClick={logout} className="flex w-full justify-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-rose-50 hover:text-rose-600 sm:justify-start"><LogOut className="h-4.5 w-4.5 shrink-0" /><span className="hidden sm:inline">Logout</span></button></div></nav></aside><div className="pl-16 sm:pl-64">{children}</div><button type="button" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="Scroll to top" className="fixed right-4 bottom-4 z-40 flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg shadow-blue-600/30 sm:hidden"><ChevronUp className="h-5 w-5" /></button></main>
+  const baseNavigation =
+    user?.role === "ADMIN"
+      ? adminNavigation
+      : user?.role === "TEACHER"
+        ? teacherNavigation
+        : user?.role === "User" || user?.role === "CASHIER"
+          ? adminNavigation
+          : studentNavigation
+  const navigation =
+    user?.role === "ADMIN" || !user?.permissions?.length
+      ? baseNavigation
+      : baseNavigation.filter(
+          (item) =>
+            item.href === "/dashboud" || user.permissions?.includes(item.href)
+        )
+  const logout = () => {
+    dispatch(clearStudentDashboard())
+    dispatch(clearAuth())
+    router.replace("/singIn")
+  }
+  return (
+    <main className="dashboard-theme min-h-svh bg-slate-50 text-slate-900">
+      <Sidebar
+        navigation={navigation}
+        pathname={pathname}
+        theme={resolvedTheme}
+        collapsed={isSidebarCollapsed}
+        onNavigate={(href) => router.push(href)}
+        onThemeToggle={() =>
+          setTheme(resolvedTheme === "dark" ? "light" : "dark")
+        }
+        onSettings={() => router.push("/dashboud/settings")}
+        onLogout={logout}
+      />
+      <div className={isSidebarCollapsed ? "pl-16" : "pl-16 sm:pl-72"}>
+        <header className="sticky top-0 z-20 flex h-20 items-center gap-4 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-8">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
+            aria-label="Toggle sidebar"
+          >
+            <PanelLeft className="h-5 w-5" />
+          </Button>
+          <div className="hidden h-8 w-px bg-slate-200 sm:block" />
+          <label className="relative hidden max-w-xl flex-1 sm:block">
+            <Search className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
+            <input
+              placeholder="Search students, teachers, classes..."
+              className="h-12 w-full rounded-xl border border-slate-200 bg-white pr-14 pl-12 text-base transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+            />
+            <kbd className="absolute top-1/2 right-4 -translate-y-1/2 text-xs text-slate-400">
+              ⌘K
+            </kbd>
+          </label>
+        </header>
+        {children}
+      </div>
+      <MobileScrollTop />
+    </main>
+  )
 }

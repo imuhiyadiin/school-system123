@@ -173,6 +173,41 @@ const roleMenuItems: Record<AuthUser["role"], Array<[string, LucideIcon]>> = {
 }
 
 const commonMenuItems: Array<[string, LucideIcon]> = [["My Profile", UserCircle2], ["Settings", Settings]]
+const permissionMenuItems: Array<[string, LucideIcon, string]> = [
+  ["Manage Students", GraduationCap, "/dashboud/students"],
+  ["Manage Teachers", UsersRound, "/dashboud/teachers"],
+  ["Manage Classes", School, "/dashboud/classrooms"],
+  ["Manage Subjects", BookOpen, "/dashboud/subjects"],
+  ["Manage Exams", ClipboardList, "/dashboud/exams"],
+  ["Reports", FileText, "/dashboud/results"],
+  ["Attendance", CalendarCheck, "/dashboud/attendance"],
+  ["Timetable", CalendarCheck, "/dashboud/timetable"],
+  ["Buses", Box, "/dashboud/buses"],
+  ["Fees", FileText, "/dashboud/fees"],
+  ["Staff", UsersRound, "/dashboud/staff"],
+  ["Payroll", FileText, "/dashboud/payroll"],
+  ["Issues", ClipboardList, "/dashboud/issues"],
+  ["Users", UsersRound, "/dashboud/users"],
+]
+const permissionMenuRoutes = Object.fromEntries(
+  permissionMenuItems.map(([label, , href]) => [label, href])
+) as Record<string, string>
+const commonMenuRoutes: Record<string, string> = {
+  Dashboard: "/dashboud",
+  "My Profile": "/dashboud/profile",
+  Settings: "/dashboud/settings",
+}
+const adminMenuRoutes: Record<string, string> = {
+  Dashboard: "/dashboud",
+  "Manage Students": "/dashboud/students",
+  "Manage Teachers": "/dashboud/teachers",
+  "Manage Classes": "/dashboud/classrooms",
+  "Manage Subjects": "/dashboud/subjects",
+  "Manage Exams": "/dashboud/exams",
+  Reports: "/dashboud/results",
+  "My Profile": "/dashboud/profile",
+  Settings: "/dashboud/settings",
+}
 
 function ThemeToggle({ mobile = false }: { mobile?: boolean }) {
   const { resolvedTheme, setTheme } = useTheme()
@@ -187,7 +222,16 @@ function ProfileDropdown({ user, isOpen, setIsOpen, mobile = false }: { user: Au
   const [logout, { isLoading }] = useLogoutMutation()
   const name = user.fullName ?? user.username ?? user.email
   const initials = name.slice(0, 1).toUpperCase()
-  const menuItems = [...roleMenuItems[user.role], ...commonMenuItems].filter((item, index, items) => items.findIndex(([label]) => label === item[0]) === index)
+  const permittedRoleItems: Array<[string, LucideIcon]> =
+    user.role === "User" || user.role === "CASHIER"
+      ? [
+          ["Dashboard", LayoutDashboard],
+          ...permissionMenuItems
+            .filter(([, , href]) => user.permissions?.includes(href))
+            .map(([label, Icon]) => [label, Icon] as [string, LucideIcon]),
+        ]
+      : roleMenuItems[user.role]
+  const menuItems = [...permittedRoleItems, ...commonMenuItems].filter((item, index, items) => items.findIndex(([label]) => label === item[0]) === index)
 
   useEffect(() => {
     if (!isOpen) return
@@ -202,6 +246,16 @@ function ProfileDropdown({ user, isOpen, setIsOpen, mobile = false }: { user: Au
 
   const handleItem = (label: string) => {
     setIsOpen(false)
+    if (user.role === "ADMIN") {
+      const href = adminMenuRoutes[label]
+      if (href) router.push(href)
+      return
+    }
+    if (user.role === "User" || user.role === "CASHIER") {
+      const href = commonMenuRoutes[label] ?? permissionMenuRoutes[label]
+      if (href) router.push(href)
+      return
+    }
     if (label.includes("Dashboard")) router.push("/dashboud")
     if (user.role === "STUDENT" && ["Attendance", "Results", "Assessments"].includes(label)) router.push("/studenLogin")
   }

@@ -14,11 +14,11 @@ export type StudentProfile = {
 }
 export type Attendance = { id: string; studentId: string; date: string; status: boolean }
 export type Result = { id: string; studentId: string; subjectId: string; examId: string; marks: number }
-export type Exam = { id: string; name: string; date: string; type: "QUIZ" | "MONTHLY" | "MIDTERM" | "FINAL" }
+export type Exam = { id: string; name: string; date: string; type: "QUIZ" | "MONTHLY" | "MIDTERM" | "THIRD" | "FINAL" }
 export type Subject = { id: string; name: string; grade: number; description?: string | null }
 export type Timetable = { id: string; classroomId: string; day: string; time: string; subject: string }
 export type Issue = { id: string; studentId: string; type: string; details: string; isResolved: boolean }
-export type AdminDashboardStats = { users: number; students: number; teachers: number; classrooms: number; subjects: number; exams: number; results: number; attendance: number; issues: number; timetable: number; recentResults: Result[]; recentAttendance: Attendance[]; recentIssues: Issue[] }
+export type AdminDashboardStats = { users: number; students: number; teachers: number; classrooms: number; subjects: number; exams: number; results: number; attendance: number; issues: number; timetable: number; buses: number; studentsWithBus: number; totalFees: number; totalBasicSalary: number; recentResults: Result[]; recentAttendance: Attendance[]; recentIssues: Issue[] }
 
 type DashboardState = {
   profile: StudentProfile | null

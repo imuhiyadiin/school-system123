@@ -8,6 +8,7 @@ export type AuthUser = {
   role: "ADMIN" | "TEACHER" | "STUDENT" | "CASHIER" | "User"
   createdAt?: string
   access_token?: string
+  permissions?: string[]
 }
 
 type AuthState = {

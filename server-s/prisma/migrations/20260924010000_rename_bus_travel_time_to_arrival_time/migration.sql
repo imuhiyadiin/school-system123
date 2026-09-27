@@ -1,0 +1,4 @@
+ALTER TABLE "Bus" RENAME COLUMN "travelTime" TO "arrivalTime";
+ALTER TABLE "Bus" ALTER COLUMN "arrivalTime" DROP NOT NULL;
+ALTER TABLE "Bus" ALTER COLUMN "arrivalTime" DROP DEFAULT;
+

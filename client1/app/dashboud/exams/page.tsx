@@ -10,5 +10,13 @@ const columns: DataTableColumn[] = [
 ]
 
 export default function ExamsPage() {
-  return <CrudPage title="Exams" endpoint="/exam" columns={columns} />
+  return (
+    <CrudPage
+      title="Exams"
+      endpoint="/exam"
+      columns={columns}
+      showStats
+      filterFields={{ search: true, classroom: false, status: false }}
+    />
+  )
 }

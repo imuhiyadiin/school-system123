@@ -5,7 +5,7 @@ ALTER TABLE "Attendance"
 ALTER TABLE "Attendance" ADD COLUMN IF NOT EXISTS "remark" TEXT;
 ALTER TABLE "Attendance" ADD COLUMN IF NOT EXISTS "classroomId" TEXT;
 
-DO $$
+DO $$l
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Attendance_classroomId_fkey') THEN
     ALTER TABLE "Attendance" ADD CONSTRAINT "Attendance_classroomId_fkey"

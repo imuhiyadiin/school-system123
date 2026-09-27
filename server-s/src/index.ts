@@ -16,6 +16,10 @@ import subjectRouter from "./router/subject-router";
 import timetableRouter from "./router/timetable-router";
 import settingsRouter from "./router/settings-router";
 import feeRouter from "./router/fee-router";
+import payrollRouter from "./router/pyroll-router";
+import employeeRouter from "./router/employe-route";
+import busRouter from "./router/bus-router";
+import { requireApiPermission, verifyToken } from "./middelwere/auth";
 
 const app = express();
 
@@ -25,6 +29,11 @@ app.use(express.json());
 const PORT = 8000;
 
 app.use(cors());
+app.use("/api", (req, res, next) => {
+  const publicPaths = ["/user/register", "/auth/register", "/user/login", "/auth/login", "/user/logout", "/auth/logout", "/user/student-login", "/auth/student-login", "/student/login", "/students/login"];
+  if (publicPaths.includes(req.path)) return next();
+  return verifyToken(req, res, () => requireApiPermission(req, res, next));
+});
 app.use("/api/user", userRouter);
 app.use("/api/auth", userRouter);
 app.use("/api/student", studentRouter);
@@ -41,6 +50,9 @@ app.use("/api/subject", subjectRouter);
 app.use("/api/timetable", timetableRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/api/fees", feeRouter);
+app.use("/api/payroll", payrollRouter);
+app.use("/api/employee", employeeRouter);
+app.use("/api/bus", busRouter);
    
 // app.get("/api", (req, res) => {
 //   res.json("Hello server");

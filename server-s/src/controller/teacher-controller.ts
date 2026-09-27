@@ -14,6 +14,10 @@ export const createTeacher = async (req: Request, res: Response) => {
       phone,
       address,
       password,
+      basicSalary,
+      allowance,
+      subjectId,
+      arrivalTime,
     } = req.body;
 
     if (
@@ -22,7 +26,8 @@ export const createTeacher = async (req: Request, res: Response) => {
       !fullName ||
       !gender ||
       !dob ||
-      !password
+      !password ||
+      !subjectId
     ) {
       return res.status(400).json({
         message: "Complete teacher data",
@@ -30,6 +35,14 @@ export const createTeacher = async (req: Request, res: Response) => {
     }
 
     const hash = hashpass.hashSync(password, 10);
+
+    const subject = await prisma.subject.findUnique({
+      where: { id: String(subjectId) },
+      select: { id: true },
+    });
+    if (!subject) {
+      return res.status(400).json({ message: "Select a valid subject" });
+    }
 
     const teacher = await prisma.teacher.create({
       data: {
@@ -39,16 +52,27 @@ export const createTeacher = async (req: Request, res: Response) => {
         phone: phone || null,
         address: address || null,
         password: hash,
+        subject: { connect: { id: subject.id } },
+        arrivalTime: typeof arrivalTime === "string" && /^\d{2}:\d{2}$/.test(arrivalTime)
+          ? arrivalTime
+          : null,
+        ...(basicSalary !== undefined && Number.isFinite(Number(basicSalary))
+          ? { basicSalary: Number(basicSalary) }
+          : {}),
+        ...(allowance !== undefined && Number.isFinite(Number(allowance))
+          ? { allowance: Number(allowance) }
+          : {}),
         user: {
           create: {
             email,
             username,
             password: hash,
-            role: "TEACHER",
+            role: "TEACHER" as const,
           },
         },
       },
       include: {
+        subject: true,
         user: {
           select: {
             id: true,
@@ -82,6 +106,7 @@ export const getTeachers = async (
     const result = await prisma.teacher.findMany({
       orderBy: { joinedAt: "desc" },
       include: {
+        subject: true,
         user: {
           select: {
             id: true,
@@ -111,6 +136,7 @@ export const getTeacher = async (
         id: String(req.params.id),
       },
       include: {
+        subject: true,
         user: {
           select: {
             id: true,
@@ -148,6 +174,10 @@ export const updateTeacher = async (
       phone,
       address,
       password,
+      basicSalary,
+      allowance,
+      subjectId,
+      arrivalTime,
     } = req.body;
 
     const teacher = await prisma.teacher.update({
@@ -164,6 +194,19 @@ export const updateTeacher = async (
         ...(address !== undefined && { address }),
         ...(password && {
           password: hashpass.hashSync(password, 10),
+        }),
+        ...(basicSalary !== undefined && Number.isFinite(Number(basicSalary)) && {
+          basicSalary: Number(basicSalary),
+        }),
+        ...(allowance !== undefined && Number.isFinite(Number(allowance)) && {
+          allowance: Number(allowance),
+        }),
+        ...(subjectId !== undefined && { subjectId: subjectId || null }),
+        ...(arrivalTime !== undefined && {
+          arrivalTime:
+            typeof arrivalTime === "string" && /^\d{2}:\d{2}$/.test(arrivalTime)
+              ? arrivalTime
+              : null,
         }),
       },
     });

@@ -1,0 +1,2 @@
+ALTER TABLE "Bus" ADD COLUMN "travelTime" TEXT NOT NULL DEFAULT '';
+

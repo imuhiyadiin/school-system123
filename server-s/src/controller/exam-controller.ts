@@ -1,6 +1,18 @@
 import { Request, Response } from "express";
 import prisma from "../lip/prisma";
 
+const validMarks = (total: unknown, minMarks: unknown) => {
+  const parsedTotal = Number(total);
+  const parsedMinimum = Number(minMarks);
+  return (
+    Number.isInteger(parsedTotal) &&
+    parsedTotal > 0 &&
+    Number.isInteger(parsedMinimum) &&
+    parsedMinimum >= 0 &&
+    parsedMinimum <= parsedTotal
+  );
+};
+
 // Create Exam
 
 export const createExam = async (req: Request, res: Response) => {
@@ -11,12 +23,13 @@ export const createExam = async (req: Request, res: Response) => {
       type,
       subjectId,
       total,
+      minMarks,
     } = req.body;
 
 
-    if (!name || !date || !type || !subjectId || !Number.isInteger(Number(total)) || Number(total) <= 0) {
+    if (!name || !date || !type || !subjectId || !validMarks(total, minMarks)) {
       return res.status(400).json({
-        message: "Fill required data",
+        message: "Enter valid total marks and minimum pass marks.",
       });
     }
 
@@ -28,6 +41,7 @@ export const createExam = async (req: Request, res: Response) => {
         type,
         subjectId,
         total: Number(total),
+        minMarks: Number(minMarks),
       },
     });
 
@@ -139,6 +153,7 @@ export const updateExam = async (req: Request, res: Response) => {
       type,
       subjectId,
       total,
+      minMarks,
     } = req.body;
 
 
@@ -155,6 +170,14 @@ export const updateExam = async (req: Request, res: Response) => {
       });
     }
 
+    const nextTotal = total === undefined ? exam.total : total;
+    const nextMinMarks = minMarks === undefined ? exam.minMarks : minMarks;
+    if (!validMarks(nextTotal, nextMinMarks)) {
+      return res.status(400).json({
+        message: "Minimum pass marks must be between 0 and total marks.",
+      });
+    }
+
 
     const updatedExam = await prisma.exam.update({
 
@@ -168,6 +191,7 @@ export const updateExam = async (req: Request, res: Response) => {
         type,
         ...(subjectId !== undefined ? { subjectId } : {}),
         ...(total !== undefined ? { total: Number(total) } : {}),
+        ...(minMarks !== undefined ? { minMarks: Number(minMarks) } : {}),
       },
 
     });

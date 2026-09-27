@@ -3,6 +3,27 @@ import { Request, Response } from "express";
 import prisma from "../lip/prisma";
 import { generateToken } from "../secure/generate-token";
 
+const nextStudentID = async () => {
+  const students = await prisma.student.findMany({ select: { studentID: true } });
+  const highestID = students.reduce((highest, student) => {
+    const id = Number(student.studentID);
+    return Number.isInteger(id) && id >= 1000 ? Math.max(highest, id) : highest;
+  }, 999);
+
+  return String(highestID + 1);
+};
+
+type StudentLoginRecord = {
+  id: string;
+  fullName: string;
+  password: string;
+  gender: string;
+  phone: string | null;
+  address: string | null;
+  parentName: string | null;
+  classrooms: unknown[];
+};
+
 export const createStudent = async (req: Request, res: Response) => {
   try {
     const {
@@ -12,39 +33,44 @@ export const createStudent = async (req: Request, res: Response) => {
       phone,
       address,
       parentName,
+      parentPhone,
       password,
       classroomId,
-      studentID,
+      totalFee,
+      busId,
     } = req.body;
 
     if (
      !  address ||
       ! parentName ||
+      ! parentPhone ||
       ! phone ||
       !fullName ||
       !gender ||
       !dob ||
       !password ||
-      !classroomId ||
-      !studentID
+      !classroomId
     ) {
       return res.status(400).json({
         message: "Complete student data",
       });
     }
 
-    const studentId = typeof studentID === "string" ? studentID.trim() : "";
-    if (!studentId) return res.status(400).json({ message: "Student ID is required" });
-
-    const existingStudentId = await prisma.student.findUnique({ where: { studentID: studentId } });
-    if (existingStudentId) return res.status(409).json({ message: "Student ID already exists. Please choose a unique ID." });
+    const parsedTotalFee = Number(totalFee);
+    if (!Number.isFinite(parsedTotalFee) || parsedTotalFee < 0) {
+      return res.status(400).json({ message: "A valid total fee is required" });
+    }
 
     const hash = hashpass.hashSync(password, 10);
-    const studentIdentity = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-    const student = await prisma.student.create({
-      data: {
-        studentID: studentId,
+    // The unique constraint protects this sequence if two students are created at once.
+    // On the unlikely collision, calculate the next available ID and try again.
+    let student;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const studentID = await nextStudentID();
+      try {
+        student = await prisma.student.create({
+          data: {
+            studentID,
         fullName,
         password: hash,
         gender,
@@ -52,29 +78,20 @@ export const createStudent = async (req: Request, res: Response) => {
         phone: phone ,
         address: address ,
         parentName: parentName ,
+        parentPhone: parentPhone ,
+        totalFee: parsedTotalFee,
+        ...(busId ? { busId: String(busId) } : {}),
         classrooms: {
           create: { classroomId },
         },
-
-        user: {
-          create: {
-            email: `student-${studentIdentity}@school.local`,
-            username: `student-${studentIdentity}`,
-            password: hash,
-            role: "STUDENT",
           },
-        },
-      },
-
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-          },
-        },
-      },
-    });
+        });
+        break;
+      } catch (error) {
+        const code = (error as { code?: string }).code;
+        if (code !== "P2002" || attempt === 2) throw error;
+      }
+    }
 
     res.status(201).json({ student });
 
@@ -102,51 +119,46 @@ export const studentLogin = async (
       });
     }
 
-    const students = await prisma.student.findMany({
+    const students = (await prisma.student.findMany({
       where: {
         phone: studentPhone,
       },
       include: {
-        user: true,
         classrooms: {
           include: {
             classroom: true,
           },
         },
       },
-    });
+    })) as unknown as StudentLoginRecord[];
 
-    const student = students.find((candidate) =>
-      hashpass.compareSync(password, candidate.password)
-    );
+    for (const student of students) {
+      if (!hashpass.compareSync(password, student.password)) continue;
 
-    if (!student) {
-      return res.status(401).json({
-        message: "Invalid phone number or password",
+      const token = generateToken({
+        id: student.id,
+        email: `student-${student.id}@school.local`,
+        role: "STUDENT",
+      });
+
+      return res.status(200).json({
+        message: "Login successful",
+        token,
+        student: {
+          id: student.id,
+          fullName: student.fullName,
+          gender: student.gender,
+          phone: student.phone,
+          address: student.address,
+          parentName: student.parentName,
+          role: "STUDENT",
+          classrooms: student.classrooms,
+        },
       });
     }
 
-    const token = generateToken({
-      id: student.user.id,
-      email: student.user.email,
-      role: student.user.role,
-    });
-
-    return res.status(200).json({
-      message: "Login successful",
-      token,
-      student: {
-        id: student.id,
-        fullName: student.fullName,
-        username: student.user.username,
-        email: student.user.email,
-        gender: student.gender,
-        phone: student.phone,
-        address: student.address,
-        parentName: student.parentName,
-        role: student.user.role,
-        classrooms: student.classrooms,
-      },
+    return res.status(401).json({
+      message: "Invalid phone number or password",
     });
   } catch (error) {
     return res.status(500).json({
@@ -162,21 +174,15 @@ export const getStudents = async (_req: Request, res: Response) => {
     const students = await prisma.student.findMany({
         orderBy: { admissionDate: "desc" },
         include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              username: true,
-            },
-          },
           classrooms: {
             include: {
               classroom: true,
             },
           },
+          bus: true,
         },
       });
-    res.json({ result: students.map(({ user, ...student }) => ({ ...student, studentID: student.studentID, user })) });
+    res.json({ result: students });
   } catch {
     res.status(500).json({
       message: "Failed to get students",
@@ -191,21 +197,10 @@ export const getStudent = async (req: Request, res: Response) => {
 
     const student = await prisma.student.findFirst({
       where: {
-        OR: [
-          { id },
-          { userId: id },
-        ],
+        id,
       },
 
       include: {
-          user: {
-            select: {
-              id: true,
-              email: true,
-              username: true,
-          },
-        },
-
         classrooms: {
           include: {
             classroom: true,
@@ -221,7 +216,7 @@ export const getStudent = async (req: Request, res: Response) => {
       });
     }
 
-    res.json({ student: { ...student, studentID: student.studentID } });
+    res.json({ student });
 
   } catch {
     res.status(500).json({
@@ -263,9 +258,12 @@ export const updateStudent = async (req: Request, res: Response) => {
       phone,
       address,
           parentName,
+          parentPhone,
           password,
           classroomId,
           studentID,
+          totalFee,
+          busId,
     } = req.body;
 
 
@@ -296,10 +294,22 @@ export const updateStudent = async (req: Request, res: Response) => {
             ? { parentName }
             : {}),
 
+          ...(parentPhone !== undefined
+            ? { parentPhone }
+            : {}),
+
           ...(studentID !== undefined
             ? {
                 studentID: String(studentID).trim(),
               }
+            : {}),
+
+          ...(totalFee !== undefined
+            ? { totalFee: Number(totalFee) }
+            : {}),
+
+          ...(busId !== undefined
+            ? { busId: String(busId).trim() || null }
             : {}),
 
           ...(password
@@ -332,15 +342,7 @@ export const updateStudent = async (req: Request, res: Response) => {
 export const deleteStudent = async (req: Request, res: Response) => {
   try {
 
-    const student = await prisma.student.findUnique({
-      where: {
-        id: String(req.params.id),
-      },
-
-      select: {
-        userId: true,
-      },
-    });
+    const student = await prisma.student.findUnique({ where: { id: String(req.params.id) } });
 
 
     if (!student) {
@@ -350,11 +352,7 @@ export const deleteStudent = async (req: Request, res: Response) => {
     }
 
 
-    await prisma.user.delete({
-      where: {
-        id: student.userId,
-      },
-    });
+    await prisma.student.delete({ where: { id: student.id } });
 
 
     res.json({

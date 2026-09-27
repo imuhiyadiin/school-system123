@@ -20,13 +20,15 @@ export const verifyToken = async(req:AuthRequest,res:Response,next:NextFunction)
             })
         }
         const decoded:{email:string,id:string,role:string} | any = jwt.verify(token,secret!)
-        const user = await prisma.user.findUnique({ where: { id: decoded.id }, select: { role: true } })
-
-        if (!user) {
-            return res.status(401).json({ message: "invalid token" })
+        if (decoded.role === "STUDENT") {
+            const student = await prisma.student.findUnique({ where: { id: decoded.id }, select: { id: true } })
+            if (!student) return res.status(401).json({ message: "invalid token" })
+            req.user = { ...decoded, role: "STUDENT", permissions: [] }
+        } else {
+            const user = await prisma.user.findUnique({ where: { id: decoded.id }, select: { role: true, permissions: true } })
+            if (!user) return res.status(401).json({ message: "invalid token" })
+            req.user = { ...decoded, role: user.role, permissions: user.permissions }
         }
-
-        req.user = { ...decoded, role: user.role }
         next()
 
     } catch (error) {
@@ -47,6 +49,25 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
     next();
 }
 
+export const requireApiPermission = (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (req.user?.role === "ADMIN" || !req.user?.permissions?.length) return next()
+    const path = req.path
+    const permissions: Array<[string, string]> = [
+        ["/students", "/dashboud/students"], ["/student", "/dashboud/students"],
+        ["/teacher", "/dashboud/teachers"], ["/classroom", "/dashboud/classrooms"],
+        ["/subject", "/dashboud/subjects"], ["/exam", "/dashboud/exams"],
+        ["/result", "/dashboud/results"], ["/attendance", "/dashboud/attendance"],
+        ["/timetable", "/dashboud/timetable"], ["/fees", "/dashboud/fees"],
+        ["/bus", "/dashboud/buses"],
+        ["/payroll", "/dashboud/payroll"],
+        ["/staff", "/dashboud/staff"],
+        ["/issue", "/dashboud/issues"], ["/user", "/dashboud/users"],
+    ]
+    const required = permissions.find(([prefix]) => path.startsWith(prefix))?.[1]
+    if (!required || req.user.permissions.includes(required)) return next()
+    return res.status(403).json({ message: "You are not authorized to access this page." })
+}
+
 export const requireDashboardAccess = (req: AuthRequest, res: Response, next: NextFunction) => {
     if (req.user?.role !== "ADMIN" && req.user?.role !== "TEACHER") {
         return res.status(403).json({
@@ -65,8 +86,8 @@ export const requireStudent = (req: AuthRequest, res: Response, next: NextFuncti
 export const requireOwnStudent = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
         const requestedId = String(req.params.studentId ?? req.params.id);
-        const student = await prisma.student.findFirst({ where: { userId: req.user?.id } });
-        if (!student || (requestedId !== student.id && requestedId !== student.userId)) {
+        const student = await prisma.student.findUnique({ where: { id: req.user?.id } });
+        if (!student || requestedId !== student.id) {
             return res.status(403).json({ message: "You are not authorized to access this student record" });
         }
         next();

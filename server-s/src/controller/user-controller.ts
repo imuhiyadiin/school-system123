@@ -4,29 +4,15 @@ import prisma from "../lip/prisma";
 import { generateToken } from "../secure/generate-token";
 import { AuthRequest } from "../middelwere/auth";
 
-async function ensureStudentProfile(user: { id: string; username: string; role: string; password: string }) {
-  if (user.role !== "STUDENT") return;
-
-  await prisma.student.upsert({
-    where: { userId: user.id },
-    update: {},
-    create: {
-      userId: user.id,
-      fullName: user.username,
-      password: user.password,
-      gender: "Not specified",
-      dob: new Date(),
-    },
-  });
-}
-
 // register user
 
 export const registerUser = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, password, email, role } = req.body;
+    const { name, password, email, role, permissions } = req.body;
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const normalizedName = typeof name === "string" ? name.trim() : "";
 
-    if (!name || !password || !email) {
+    if (!normalizedName || typeof password !== "string" || !password.length || !normalizedEmail) {
       return res.status(400).json({
         message: "complete data name,email and password",
         status: 400,
@@ -35,7 +21,7 @@ export const registerUser = async (req: AuthRequest, res: Response) => {
 
     const checkEmail = await prisma.user.findUnique({
       where: {
-        email,
+        email: normalizedEmail,
       },
     });
 
@@ -58,16 +44,18 @@ export const registerUser = async (req: AuthRequest, res: Response) => {
       || role === "User"
       ? role
       : "STUDENT";
+    const allowedPermissions = ["/dashboud/students", "/dashboud/teachers", "/dashboud/classrooms", "/dashboud/subjects", "/dashboud/exams", "/dashboud/results", "/dashboud/attendance", "/dashboud/timetable", "/dashboud/buses", "/dashboud/fees", "/dashboud/staff", "/dashboud/payroll", "/dashboud/issues", "/dashboud/users"];
+    const selectedPermissions = Array.isArray(permissions)
+      ? permissions.filter((permission): permission is string => typeof permission === "string" && allowedPermissions.includes(permission))
+      : [];
 
     const newUser = await prisma.user.create({
       data: {
-        email,
-        username: name,
+        email: normalizedEmail,
+        username: normalizedName,
         password: passwordHash,
         role: selectedRole,
-        ...(selectedRole === "STUDENT"
-          ? { student: { create: { fullName: name, password: passwordHash, gender: "Not specified", dob: new Date() } } }
-          : {}),
+        permissions: selectedPermissions,
       },
       select: {
         id: true,
@@ -75,6 +63,7 @@ export const registerUser = async (req: AuthRequest, res: Response) => {
         username: true,
         createdAt: true,
         role: true,
+        permissions: true,
       },
     });
 
@@ -101,8 +90,9 @@ export const registerUser = async (req: AuthRequest, res: Response) => {
 export const userLogin = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
 
-    if (!email || !password) {
+    if (!normalizedEmail || typeof password !== "string" || !password.length) {
       return res.status(400).json({
         message: "enter your email and password",
         status: 400,
@@ -110,7 +100,7 @@ export const userLogin = async (req: Request, res: Response) => {
     }
 
     const user = await prisma.user.findFirst({
-      where: { email },
+      where: { email: normalizedEmail },
     });
 
     if (!user) {
@@ -129,14 +119,13 @@ export const userLogin = async (req: Request, res: Response) => {
       });
     }
 
-    await ensureStudentProfile(user);
-
     const userData = {
       id: user.id,
       email: user.email,
       fullName: user.username,
       createdAt: user.createdAt,
       role: user.role,
+      permissions: user.permissions,
       access_token: generateToken({
         email: user.email,
         id: user.id,
@@ -172,15 +161,9 @@ export const whoami = async (req: AuthRequest, res: Response) => {
         username: true,
         email: true,
         role: true,
+        permissions: true,
         createdAt: true,
         updatedAt: true,
-        student: {
-          select: {
-            id: true,
-            fullName: true,
-            classrooms: { select: { classroom: { select: { id: true, name: true, section: true, grade: true } } } },
-          },
-        },
       },
     });
 
@@ -200,12 +183,15 @@ export const whoami = async (req: AuthRequest, res: Response) => {
 
 export const updateUser = async (req: AuthRequest, res: Response) => {
   try {
-    const { fullname } = req.body;
+    const { fullname, name, email, password, role, permissions } = req.body;
     const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const updatedName = String(fullname ?? name ?? "").trim();
+    const updatedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const validRoles = ["ADMIN", "TEACHER", "STUDENT", "CASHIER", "User"];
 
-    if (!fullname || !id) {
+    if (!id || (!updatedName && !updatedEmail && !password && !role && !Array.isArray(permissions))) {
       return res.status(400).json({
-        message: "input user fullname ",
+        message: "Provide at least one user field to update.",
       }); 
     }
 
@@ -219,19 +205,45 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    await prisma.user.update({
+    if (updatedEmail && updatedEmail !== user.email) {
+      const existingEmail = await prisma.user.findUnique({ where: { email: updatedEmail } });
+      if (existingEmail && existingEmail.id !== id)
+        return res.status(409).json({ message: "That email is already used by another account." });
+    }
+    if (role && !validRoles.includes(role))
+      return res.status(400).json({ message: "Invalid user role." });
+    if (password !== undefined && (typeof password !== "string" || !password.length))
+      return res.status(400).json({ message: "Password cannot be empty." });
+
+    const updatedUser = await prisma.user.update({
       where: {
         id,
       },
       data: {
-        username: fullname,
+        ...(updatedName ? { username: updatedName } : {}),
+        ...(updatedEmail ? { email: updatedEmail } : {}),
+        ...(password ? { password: hashpass.hashSync(password, 10) } : {}),
+        ...(role ? { role } : {}),
+        ...(Array.isArray(permissions)
+          ? {
+              permissions: permissions.filter(
+                (permission): permission is string =>
+                  typeof permission === "string" &&
+                  ["/dashboud/students", "/dashboud/teachers", "/dashboud/classrooms", "/dashboud/subjects", "/dashboud/exams", "/dashboud/results", "/dashboud/attendance", "/dashboud/timetable", "/dashboud/buses", "/dashboud/fees", "/dashboud/staff", "/dashboud/payroll", "/dashboud/issues", "/dashboud/users"].includes(permission)
+              ),
+            }
+          : {}),
       },
+      select: { id: true, username: true, email: true, role: true, permissions: true },
     });
 
     res.json({
       message: "user updated success",
+      user: updatedUser,
     });
   } catch (error) {
+    if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002")
+      return res.status(409).json({ message: "That email or username is already used by another account." });
     res.status(500).json({
       message: "server error",
     });
@@ -340,8 +352,6 @@ export const studentLogin = async (req: Request, res: Response) => {
     if (!user || user.role !== "STUDENT" || !hashpass.compareSync(password, user.password)) {
       return res.status(401).json({ message: "Student credentials are incorrect" });
     }
-
-    await ensureStudentProfile(user);
 
     const access_token = generateToken({ id: user.id, email: user.email, role: user.role });
 

@@ -14,7 +14,7 @@ type Student = {
 }
 
 type Subject = { id: string; name: string; grade: number; description?: string | null }
-type Result = { id: string; marks: number; schoolYear?: string | null; subject?: { name: string }; exam?: { id: string; name: string; type: string; date?: string; total?: number } }
+type Result = { id: string; marks: number; schoolYear?: string | null; subject?: { id?: string; name: string }; exam?: { id: string; name: string; type: string; date?: string; total?: number } }
 type Issue = { id: string; type: string; details: string; isResolved: boolean }
 
 const fallbackStudent: Student = {
@@ -23,6 +23,12 @@ const fallbackStudent: Student = {
   address: "Not available",
   parentName: "Not available",
 }
+
+const uniqueResults = (records: Result[]) => [...new Map(records.map((result) => {
+  const year = result.schoolYear ?? (result.exam?.date ? new Date(result.exam.date).getFullYear().toString() : "")
+  const key = `${result.subject?.id ?? result.subject?.name}-${result.exam?.type ?? result.exam?.id}-${year}`
+  return [key, result]
+})).values()]
 
 export default function ResultStudentPage() {
   const [student, setStudent] = useState<Student>(fallbackStudent)
@@ -50,7 +56,7 @@ export default function ResultStudentPage() {
         apiClient.get<{ subjects: Subject[] }>("/subject"),
         apiClient.get<Issue[]>("/issue"),
       ]).then(([resultResponse, subjectResponse, issueResponse]) => {
-        setResults(resultResponse.data)
+        setResults(uniqueResults(resultResponse.data))
         setSubjects(grade ? subjectResponse.data.subjects.filter((subject) => subject.grade === grade) : subjectResponse.data.subjects)
         setIssues(issueResponse.data)
       }).catch(() => undefined).finally(() => setIsLoading(false))
@@ -74,7 +80,7 @@ export default function ResultStudentPage() {
   const resultYears = Array.from(new Set(results.map(resultYear).filter(Boolean))).sort((a, b) => Number(b) - Number(a))
   const activeYear = selectedYear || resultYears[0] || ""
   const yearResults = activeYear ? results.filter((result) => resultYear(result) === activeYear) : results
-  const availableExamTypes = ["MONTHLY", "MIDTERM", "FINAL"].filter((type) => yearResults.some((result) => result.exam?.type === type))
+  const availableExamTypes = ["MONTHLY", "MIDTERM", "THIRD", "FINAL"].filter((type) => yearResults.some((result) => result.exam?.type === type))
   const filteredResults = selectedExamType === "all" ? yearResults : yearResults.filter((result) => result.exam?.type === selectedExamType)
   const totalMarks = filteredResults.reduce((sum, result) => sum + result.marks, 0)
   const totalPossibleMarks = filteredResults.reduce((sum, result) => sum + (result.exam?.total ?? 100), 0)

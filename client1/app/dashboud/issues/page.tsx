@@ -10,5 +10,12 @@ const columns: DataTableColumn[] = [
 ]
 
 export default function IssuesPage() {
-  return <CrudPage title="Issues" endpoint="/issue" columns={columns} />
+  return (
+    <CrudPage
+      title="Issues"
+      endpoint="/issue"
+      columns={columns}
+      filterFields={{ status: false, studentId: true }}
+    />
+  )
 }

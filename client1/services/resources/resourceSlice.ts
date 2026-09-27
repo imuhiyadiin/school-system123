@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
 import { apiClient } from "@/services/api/client"
 
 export type ResourceName = "subject" | "exam"
-export type ResourceRecord = { id: string; name: string; grade?: number; description?: string | null; date?: string; type?: "QUIZ" | "MONTHLY" | "MIDTERM" | "FINAL" }
+export type ResourceRecord = { id: string; name: string; grade?: number; description?: string | null; date?: string; type?: "QUIZ" | "MONTHLY" | "MIDTERM" | "THIRD" | "FINAL" }
 type State = { items: ResourceRecord[]; loading: boolean; saving: boolean; error: string | null }
 const initialState: State = { items: [], loading: false, saving: false, error: null }
 

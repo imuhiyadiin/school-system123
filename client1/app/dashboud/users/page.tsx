@@ -9,5 +9,12 @@ const columns: DataTableColumn[] = [
 ]
 
 export default function UsersPage() {
-  return <CrudPage title="Users" endpoint="/user" createEndpoint="/user/register" columns={columns} />
+  return (
+    <CrudPage
+      title="Users"
+      endpoint="/user"
+      createEndpoint="/user/register"
+      columns={columns}
+    />
+  )
 }

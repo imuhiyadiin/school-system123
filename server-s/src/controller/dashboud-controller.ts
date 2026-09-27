@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 
 export const getDashboard = async (req: Request, res: Response) => {
   try {
-    const [users, students, teachers, classrooms, subjects, exams, results, attendance, issues, timetable, recentResults, recentAttendance, recentIssues] = await Promise.all([
+    const [users, students, teachers, classrooms, subjects, exams, results, attendance, issues, timetable, buses, studentsWithBus, studentFees, teacherSalaries, staffSalaries, recentResults, recentAttendance, recentIssues] = await Promise.all([
       prisma.user.count(),
       prisma.student.count(),
       prisma.teacher.count(),
@@ -14,6 +14,11 @@ export const getDashboard = async (req: Request, res: Response) => {
       prisma.attendance.count(),
       prisma.issue.count(),
       prisma.timetable.count(),
+      prisma.bus.count(),
+      prisma.student.count({ where: { busId: { not: null } } }),
+      prisma.student.aggregate({ _sum: { totalFee: true } }),
+      prisma.teacher.aggregate({ _sum: { basicSalary: true } }),
+      prisma.employee.aggregate({ _sum: { basicSalary: true } }),
       prisma.result.findMany({ orderBy: { id: "desc" }, take: 5 }),
       prisma.attendance.findMany({ orderBy: { date: "desc" }, take: 5 }),
       prisma.issue.findMany({ orderBy: { id: "desc" }, take: 5 }),
@@ -30,6 +35,12 @@ export const getDashboard = async (req: Request, res: Response) => {
       attendance,
       issues,
       timetable,
+      buses,
+      studentsWithBus,
+      totalFees: studentFees._sum.totalFee ?? 0,
+      totalBasicSalary:
+        (teacherSalaries._sum.basicSalary ?? 0) +
+        (staffSalaries._sum.basicSalary ?? 0),
       recentResults,
       recentAttendance,
       recentIssues,
