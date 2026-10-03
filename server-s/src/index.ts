@@ -27,7 +27,9 @@ dotenv.config();
  
 app.use(express.json());
 
-app.use(cors());
+app.use(cors(
+  {origin:["http://localhost:3000",""]}
+));
 app.use("/api", (req, res, next) => {
   const publicPaths = ["/user/register", "/auth/register", "/user/login", "/auth/login", "/user/logout", "/auth/logout", "/user/student-login", "/auth/student-login", "/student/login", "/students/login", "/teacher/login"];
   const requestPath = req.originalUrl.replace(/^\/api/, "").split("?")[0];
