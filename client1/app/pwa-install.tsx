@@ -8,7 +8,7 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>
 }
 
-const DISMISS_KEY = "creative-readers-install-dismissed"
+const DISMISS_KEY = "creative-readers-install-dismissed-v2"
 
 export default function PwaInstall() {
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null)
@@ -25,7 +25,13 @@ export default function PwaInstall() {
 
     setInstalled(standalone)
     setIsIos(ios)
-    setDismissed(standalone || window.localStorage.getItem(DISMISS_KEY) === "true")
+    let wasDismissed = false
+    try {
+      wasDismissed = window.localStorage.getItem(DISMISS_KEY) === "true"
+    } catch {
+      // Keep the install prompt available when browser storage is restricted.
+    }
+    setDismissed(standalone || wasDismissed)
 
     const handleBeforeInstall = (event: Event) => {
       event.preventDefault()
@@ -47,7 +53,11 @@ export default function PwaInstall() {
   if (installed || dismissed || (!installPrompt && !isIos)) return null
 
   const dismiss = () => {
-    window.localStorage.setItem(DISMISS_KEY, "true")
+    try {
+      window.localStorage.setItem(DISMISS_KEY, "true")
+    } catch {
+      // Dismissal still applies for this visit if storage is unavailable.
+    }
     setDismissed(true)
   }
 
