@@ -9,6 +9,7 @@ import ReduxProvider from "./redux-provider"
 import { Toaster } from "sonner"
 import type { Metadata, Viewport } from "next"
 import PwaRegister from "./pwa-register"
+import PwaInstall from "./pwa-install"
 
 export const metadata: Metadata = {
   applicationName: "Creative Readers",
@@ -56,6 +57,7 @@ export default function RootLayout({
         <ThemeProvider>
           <ReduxProvider>
             <PwaRegister />
+            <PwaInstall />
             <Header />
             {children}
             <Footer />

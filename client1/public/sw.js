@@ -1,4 +1,5 @@
-const CACHE_NAME = "creative-readers-shell-v2"
+const CACHE_NAME = "creative-readers-shell-v3"
+const STATIC_CACHE = "creative-readers-static-v3"
 const OFFLINE_URL = "/offline.html"
 const APP_SHELL = [OFFLINE_URL, "/icons/icon-192.png", "/icons/icon-512.png"]
 
@@ -14,12 +15,11 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key.startsWith("creative-readers-") && key !== CACHE_NAME)
+          .filter((key) => key.startsWith("creative-readers-") && key !== CACHE_NAME && key !== STATIC_CACHE)
           .map((key) => caches.delete(key)),
       ),
-    ),
+    ).then(() => self.clients.claim()),
   )
-  self.clients.claim()
 })
 
 self.addEventListener("fetch", (event) => {
@@ -38,17 +38,16 @@ self.addEventListener("fetch", (event) => {
     return
   }
 
-  if (url.pathname.startsWith("/icons/")) {
+  // Cache immutable framework assets and app icons only. Never cache API,
+  // authentication, or rendered page responses that could contain school data.
+  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/")) {
     event.respondWith(
-      caches.match(request).then((cached) => {
+      caches.open(STATIC_CACHE).then(async (cache) => {
+        const cached = await cache.match(request)
         if (cached) return cached
-        return fetch(request).then((response) => {
-          if (response.ok) {
-            const copy = response.clone()
-            void caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
-          }
-          return response
-        })
+        const response = await fetch(request)
+        if (response.ok) await cache.put(request, response.clone())
+        return response
       }),
     )
   }
