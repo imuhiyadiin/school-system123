@@ -33,15 +33,15 @@ export default function SignUp() {
   };
 
   return (
-    <div className="mt-8 flex min-h-screen items-center justify-center bg-black px-4 py-8">
+    <div className="mt-8 flex min-h-screen items-center justify-center bg-slate-100 px-4 py-8 transition-colors dark:bg-black">
 
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-zinc-900 p-5 shadow-2xl sm:p-8">
+      <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-8 dark:border-white/10 dark:bg-zinc-900">
 
-       <h1 className="text-3xl font-bold text-white text-center mb-2">
+       <h1 className="mb-2 text-center text-3xl font-bold text-slate-900 dark:text-white">
           Welcome Back
         </h1>
 
-        <p className="text-zinc-400 text-center mb-8">
+        <p className="mb-8 text-center text-slate-500 dark:text-zinc-400">
           Sign in to your account
         </p>
 
@@ -56,7 +56,7 @@ export default function SignUp() {
             <input
               type="text"
               placeholder="Username"
-              className="w-full bg-black border border-white/20 text-white rounded-xl py-3 pl-12 pr-4 outline-none focus:border-white transition"
+              className="w-full rounded-xl border border-slate-300 bg-white py-3 pr-4 pl-12 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 dark:border-white/20 dark:bg-black dark:text-white dark:focus:border-white"
               value={name}
               onChange={(event) => setName(event.target.value)}
               required
@@ -71,7 +71,7 @@ export default function SignUp() {
             <input
               type="email"
               placeholder="Email address"
-              className="w-full bg-black border border-white/20 text-white rounded-xl py-3 pl-12 pr-4 outline-none focus:border-white transition"
+              className="w-full rounded-xl border border-slate-300 bg-white py-3 pr-4 pl-12 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 dark:border-white/20 dark:bg-black dark:text-white dark:focus:border-white"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
@@ -86,7 +86,7 @@ export default function SignUp() {
             <input
               type="password"
               placeholder=" Password"
-              className="w-full bg-black border border-white/20 text-white rounded-xl py-3 pl-12 pr-4 outline-none focus:border-white transition"
+              className="w-full rounded-xl border border-slate-300 bg-white py-3 pr-4 pl-12 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-500 dark:border-white/20 dark:bg-black dark:text-white dark:focus:border-white"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
@@ -97,13 +97,13 @@ export default function SignUp() {
           {/* Remember & Forgot */}
           <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-center sm:justify-between">
 
-            <label className="text-zinc-400 flex gap-2">
+            <label className="flex gap-2 text-slate-500 dark:text-zinc-400">
               <input type="checkbox" />
               Remember me
             </label>
 
 
-            <a className="text-white hover:underline cursor-pointer">
+            <a className="cursor-pointer text-blue-700 hover:underline dark:text-white">
               Forgot password?
             </a>
 
@@ -114,7 +114,7 @@ export default function SignUp() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-white text-black font-semibold py-3 rounded-xl hover:bg-zinc-200 transition duration-300"
+            className="w-full rounded-xl bg-blue-700 py-3 font-semibold text-white transition duration-300 hover:bg-blue-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
           >
             {isLoading ? "Signing Up..." : "Sign Up"}
           </button>
@@ -123,11 +123,11 @@ export default function SignUp() {
         </form>
 
 
-        <p className="text-zinc-400 text-center mt-6">
+        <p className="mt-6 text-center text-slate-500 dark:text-zinc-400">
           Don&apos;t have an account?
 
           <Link href="/singIn">
-            <span className="text-white ml-2 cursor-pointer hover:underline">
+            <span className="ml-2 cursor-pointer text-blue-700 hover:underline dark:text-white">
               Sign in
             </span>
           </Link>

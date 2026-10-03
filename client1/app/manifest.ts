@@ -1,0 +1,23 @@
+import type { MetadataRoute } from "next"
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    id: "/",
+    name: "Creative Readers School Management",
+    short_name: "Creative Readers",
+    description: "School management for Creative Readers",
+    start_url: "/",
+    scope: "/",
+    display: "standalone",
+    display_override: ["standalone", "minimal-ui"],
+    orientation: "any",
+    background_color: "#f8fafc",
+    theme_color: "#f8fafc",
+    categories: ["education", "productivity"],
+    icons: [
+      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+    ],
+  }
+}

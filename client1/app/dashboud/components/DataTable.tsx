@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Link from "next/link"
 import { Download, Funnel, RotateCcw, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -9,6 +10,7 @@ export type DataTableColumn = {
   key: string
   label: string
   format?: "dateTime" | "time"
+  linkTo?: string
 }
 export type DataTableFilterFields = {
   search?: boolean
@@ -70,6 +72,16 @@ const classroomValue = (record: RecordValue) =>
 
 const columnValue = (record: RecordValue, column: DataTableColumn) => {
   const value = record[column.key]
+  if (column.key === "subjects" && Array.isArray(value)) {
+    return value
+      .map((item) => {
+        if (typeof item !== "object" || item === null) return ""
+        const subject = (item as { subject?: { name?: unknown } }).subject
+        return typeof subject?.name === "string" ? subject.name : ""
+      })
+      .filter(Boolean)
+      .join(", ") || "—"
+  }
   if (column.format === "dateTime" && typeof value === "string") {
     const date = new Date(value)
     if (!Number.isNaN(date.getTime()))
@@ -590,7 +602,22 @@ export function DataTable({
                         key={column.key}
                         className="max-w-48 truncate px-3 py-3 text-slate-700"
                       >
-                        {columnValue(record, column)}
+                        {column.linkTo ? (
+                          <Link
+                            href={`${column.linkTo}/${encodeURIComponent(String(record.id))}`}
+                            className="font-semibold text-blue-700 hover:underline"
+                          >
+                            {columnValue(record, column)}
+                          </Link>
+                        ) : column.key === "bus" ? (
+                          record.bus || record.busId ? (
+                            <span className="font-bold text-emerald-600" aria-label="Uses school bus">✓</span>
+                          ) : (
+                            "—"
+                          )
+                        ) : (
+                          columnValue(record, column)
+                        )}
                       </td>
                     ))}
                     {hasActions && (

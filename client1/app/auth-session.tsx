@@ -39,6 +39,18 @@ export default function AuthSession({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (!isInitialized || !pathname.startsWith("/dashboud")) return
     if (!isAuthenticated) router.replace("/singIn")
+    if (isAuthenticated && user?.role === "TEACHER") {
+      if (pathname === "/dashboud") {
+        window.location.replace("/dashboud/exams")
+      } else if (
+        pathname !== "/dashboud/exams" &&
+        !pathname.startsWith("/dashboud/exams/") &&
+        pathname !== "/dashboud/results"
+      ) {
+        window.location.replace("/dashboud/exams")
+      }
+      return
+    }
     if (pathname.startsWith("/dashboud/resources") && user?.role !== "ADMIN") router.replace("/dashboud")
   }, [isAuthenticated, isInitialized, pathname, router, user?.role])
 

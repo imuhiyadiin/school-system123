@@ -77,8 +77,7 @@ model Teacher {
   password    String
   basicSalary Float    @default(0)
   allowance   Float    @default(0)
-  subjectId   String?
-  subject     Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  subjects    TeacherSubject[]
   arrivalTime String?
   classrooms  Classroom[]
   payrolls    Payroll[]
@@ -202,7 +201,18 @@ model Subject {
 
   results       Result[]
   exams         Exam[]
-  teachers      Teacher[]
+  teachers      TeacherSubject[]
+}
+
+model TeacherSubject {
+  teacherId String
+  subjectId String
+
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@id([teacherId, subjectId])
+  @@index([subjectId])
 }
 
 model Exam {

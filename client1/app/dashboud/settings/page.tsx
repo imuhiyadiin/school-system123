@@ -9,12 +9,20 @@ export default function SettingsPage() {
         <p className="mt-3 text-sm text-slate-500">
           The settings section is available at this route.
         </p>
-        <a
-          href="/dashboud"
-          className="mt-6 inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
-        >
-          Back to Dashboard
-        </a>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <a
+            href="/dashboud"
+            className="inline-flex rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+          >
+            Back to Dashboard
+          </a>
+          <a
+            href="/"
+            className="inline-flex rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+          >
+            Back to Home
+          </a>
+        </div>
       </section>
     </main>
   )

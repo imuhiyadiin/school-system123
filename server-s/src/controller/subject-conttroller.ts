@@ -1,5 +1,15 @@
 import { Request, Response } from "express";
 import prisma from "../lip/prisma";
+import type { AuthRequest } from "../middelwere/auth";
+
+const teacherIdForRequest = async (req: AuthRequest) => {
+  if (req.user?.role !== "TEACHER") return null;
+  const teacher = await prisma.teacher.findUnique({
+    where: { userId: req.user.id },
+    select: { id: true },
+  });
+  return teacher?.id ?? "";
+};
 
 // Create Subject
 
@@ -63,10 +73,15 @@ export const createSubject = async (req: Request, res: Response) => {
 
 // Get All Subjects
 
-export const getSubjects = async (req: Request, res: Response) => {
+export const getSubjects = async (req: AuthRequest, res: Response) => {
   try {
+    const teacherId = await teacherIdForRequest(req);
+    if (teacherId === "") {
+      return res.status(403).json({ message: "Teacher account was not found." });
+    }
 
     const subjects = await prisma.subject.findMany({
+      where: teacherId ? { teachers: { some: { teacherId } } } : undefined,
       orderBy: { id: "desc" },
       include: {
         results: true,
@@ -92,10 +107,14 @@ export const getSubjects = async (req: Request, res: Response) => {
 
 // Get Single Subject
 
- export const getSubject = async (req: Request, res: Response) => {
+export const getSubject = async (req: AuthRequest, res: Response) => {
   try {
 
     const id = String(req.params.id);
+    const teacherId = await teacherIdForRequest(req);
+    if (teacherId === "") {
+      return res.status(403).json({ message: "Teacher account was not found." });
+    }
 
 
     const subject = await prisma.subject.findUnique({
@@ -117,6 +136,18 @@ export const getSubjects = async (req: Request, res: Response) => {
     if (!subject) {
       return res.status(404).json({
         message: "Subject not found",
+      });
+    }
+
+    if (
+      teacherId &&
+      !(await prisma.teacherSubject.findUnique({
+        where: { teacherId_subjectId: { teacherId, subjectId: id } },
+        select: { teacherId: true },
+      }))
+    ) {
+      return res.status(403).json({
+        message: "You can only view your assigned subjects.",
       });
     }
 

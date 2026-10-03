@@ -88,7 +88,7 @@ export default function ResultStudentPage() {
   const failedResults = filteredResults.filter((result) => result.marks < (result.exam?.total ?? 100) / 2)
 
   return (
-    <main className="min-h-svh overflow-hidden bg-[#f8fbff] text-slate-800">
+    <main className="min-h-svh overflow-hidden bg-[#fbfcfa] text-slate-800">
       <section className="relative mx-auto min-h-svh w-full max-w-2xl px-5 pb-12 sm:px-8">
         <div className="absolute -top-32 left-1/2 h-72 w-[145%] -translate-x-1/2 rounded-[0_0_50%_50%] bg-gradient-to-r from-emerald-500 to-teal-400 shadow-sm" />
 

@@ -20,6 +20,7 @@ type AuthResponse = { message: string; user: AuthUser }
 type Credentials = { email: string; password: string }
 type StudentCredentials = { phone: string; password: string }
 type StudentLoginResponse = { message: string; token: string; student: AuthUser }
+type TeacherLoginResponse = { message: string; token: string; teacher: AuthUser }
 type RegisterCredentials = Credentials & { name: string }
 type CurrentUserResponse = { message: string; user: AuthUser }
 
@@ -88,6 +89,20 @@ export const authApi = createApi({
         }
       },
     }),
+    authTeacherLogin: builder.mutation<TeacherLoginResponse, Credentials>({
+      query: (data) => ({ url: "/teacher/login", method: "POST", data }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        dispatch(setAuthLoading(true))
+        try {
+          const response = (await queryFulfilled).data
+          dispatch(setCredentials({ user: response.teacher, token: response.token }))
+        } catch (error) {
+          dispatch(setAuthError(readErrorMessage(error)))
+        } finally {
+          dispatch(setAuthLoading(false))
+        }
+      },
+    }),
     getCurrentUser: builder.query<CurrentUserResponse, void>({
       query: () => ({ url: "/auth/whoami", method: "GET" }),
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
@@ -115,4 +130,4 @@ export const authApi = createApi({
   }),
 })
 
-export const { useAuthLoginMutation, useAuthRegisterMutation, useAuthStudentLoginMutation, useGetCurrentUserQuery, useLogoutMutation } = authApi
+export const { useAuthLoginMutation, useAuthRegisterMutation, useAuthStudentLoginMutation, useAuthTeacherLoginMutation, useGetCurrentUserQuery, useLogoutMutation } = authApi

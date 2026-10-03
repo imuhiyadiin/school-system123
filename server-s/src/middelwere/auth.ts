@@ -50,8 +50,30 @@ export const requireAdmin = (req: AuthRequest, res: Response, next: NextFunction
 }
 
 export const requireApiPermission = (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (req.user?.role === "ADMIN" || !req.user?.permissions?.length) return next()
     const path = req.path
+    if (req.user?.role === "ADMIN") return next()
+    if (req.user?.role === "TEACHER") {
+        const teacherReadablePrefixes = [
+            "/auth/whoami",
+            "/exam",
+            "/result",
+            "/subject",
+            "/classroom",
+            "/student",
+            "/students",
+        ]
+        const allowedPrefix = teacherReadablePrefixes.find(
+            (prefix) => path === prefix || path.startsWith(`${prefix}/`)
+        )
+        const readOnlyPrefix = ["/exam", "/subject", "/classroom", "/student", "/students"].some(
+            (prefix) => path === prefix || path.startsWith(`${prefix}/`)
+        )
+        if (!allowedPrefix || (readOnlyPrefix && req.method !== "GET")) {
+            return res.status(403).json({ message: "Teachers can access exams and results only." })
+        }
+        return next()
+    }
+    if (!req.user?.permissions?.length) return next()
     const permissions: Array<[string, string]> = [
         ["/students", "/dashboud/students"], ["/student", "/dashboud/students"],
         ["/teacher", "/dashboud/teachers"], ["/classroom", "/dashboud/classrooms"],

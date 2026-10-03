@@ -1,8 +1,11 @@
 import hashpass from "bcryptjs";
 import { Request, Response } from "express";
 import prisma from "../lip/prisma";
+import { generateToken } from "../secure/generate-token";
 
-// Create Teacher
+// ===============================
+// CREATE TEACHER
+// ===============================
 export const createTeacher = async (req: Request, res: Response) => {
   try {
     const {
@@ -14,136 +17,344 @@ export const createTeacher = async (req: Request, res: Response) => {
       phone,
       address,
       password,
+      subjectIds,
       basicSalary,
       allowance,
-      subjectId,
       arrivalTime,
     } = req.body;
 
+    const normalizedEmail =
+      typeof email === "string" ? email.trim().toLowerCase() : "";
+    const normalizedUsername =
+      typeof username === "string" ? username.trim() : "";
+
+    const requiredFields: [string, unknown][] = [
+      ["email", normalizedEmail],
+      ["username", normalizedUsername],
+      ["fullName", fullName],
+      ["gender", gender],
+      ["dob", dob],
+      ["password", password],
+    ];
+    const missingFields = requiredFields
+      .filter(([, value]) => typeof value !== "string" || !value.trim())
+      .map(([field]) => field);
+
     if (
-      !email ||
-      !username ||
-      !fullName ||
-      !gender ||
-      !dob ||
-      !password ||
-      !subjectId
+      missingFields.length > 0 ||
+      !Array.isArray(subjectIds) ||
+      subjectIds.length === 0
     ) {
       return res.status(400).json({
-        message: "Complete teacher data",
+        message:
+          missingFields.length > 0
+            ? `Missing teacher fields: ${missingFields.join(", ")}`
+            : "Select at least one teaching subject.",
       });
     }
 
-    const hash = hashpass.hashSync(password, 10);
-
-    const subject = await prisma.subject.findUnique({
-      where: { id: String(subjectId) },
-      select: { id: true },
+    const selectedSubjectIds: string[] = [...new Set(subjectIds.map(String))];
+    const availableSubjects = await prisma.subject.findMany({
+      where: {
+        id: {
+          in: selectedSubjectIds,
+        },
+      },
+      select: {
+        id: true,
+      },
     });
-    if (!subject) {
-      return res.status(400).json({ message: "Select a valid subject" });
+
+    if (availableSubjects.length !== selectedSubjectIds.length) {
+      return res.status(400).json({
+        message: "One or more selected subjects were not found",
+      });
     }
 
+    // Check existing email
+    const existingEmail = await prisma.user.findUnique({
+      where: {
+        email: normalizedEmail,
+      },
+    });
+
+    if (existingEmail) {
+      return res.status(400).json({
+        message: "Email already exists",
+      });
+    }
+
+    // Check existing username
+    const existingUsername = await prisma.user.findUnique({
+      where: {
+        username: normalizedUsername,
+      },
+    });
+
+    if (existingUsername) {
+      return res.status(400).json({
+        message: "Username already exists",
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await hashpass.hash(password, 10);
+
+    // Create User + Teacher
     const teacher = await prisma.teacher.create({
       data: {
         fullName,
         gender,
         dob: new Date(dob),
-        phone: phone || null,
-        address: address || null,
-        password: hash,
-        subject: { connect: { id: subject.id } },
-        arrivalTime: typeof arrivalTime === "string" && /^\d{2}:\d{2}$/.test(arrivalTime)
-          ? arrivalTime
-          : null,
-        ...(basicSalary !== undefined && Number.isFinite(Number(basicSalary))
-          ? { basicSalary: Number(basicSalary) }
+        phone,
+        address,
+        password: hashedPassword,
+        basicSalary: basicSalary ? Number(basicSalary) : 0,
+        allowance: allowance ? Number(allowance) : 0,
+        arrivalTime: arrivalTime || null,
+        ...(selectedSubjectIds.length > 0
+          ? {
+              subjects: {
+                create: selectedSubjectIds.map((subjectId) => ({
+                  subject: {
+                    connect: {
+                      id: subjectId,
+                    },
+                  },
+                })),
+              },
+            }
           : {}),
-        ...(allowance !== undefined && Number.isFinite(Number(allowance))
-          ? { allowance: Number(allowance) }
-          : {}),
+
         user: {
           create: {
-            email,
-            username,
-            password: hash,
-            role: "TEACHER" as const,
+            email: normalizedEmail,
+            username: normalizedUsername,
+            password: hashedPassword,
+            role: "TEACHER",
           },
         },
       },
+
       include: {
-        subject: true,
-        user: {
-          select: {
-            id: true,
-            email: true,
-            username: true,
+        user: true,
+        subjects: {
+          include: {
+            subject: true,
           },
         },
       },
     });
 
-    res.status(201).json({ teacher });
-  } catch (error: unknown) {
-    if (typeof error === "object" && error !== null && "code" in error && error.code === "P2002") {
-      return res.status(409).json({
-        message: "Email or username already exists",
+    return res.status(201).json({
+      message: "Teacher created successfully",
+
+      teacher: {
+        id: teacher.id,
+        userId: teacher.userId,
+        fullName: teacher.fullName,
+        gender: teacher.gender,
+        dob: teacher.dob,
+        phone: teacher.phone,
+        address: teacher.address,
+        joinedAt: teacher.joinedAt,
+        basicSalary: teacher.basicSalary,
+        allowance: teacher.allowance,
+        arrivalTime: teacher.arrivalTime,
+        email: teacher.user.email,
+        username: teacher.user.username,
+        role: teacher.user.role,
+        user: {
+          email: teacher.user.email,
+          username: teacher.user.username,
+        },
+        subjects: teacher.subjects,
+      },
+    });
+  } catch (error) {
+    console.error("Create Teacher Error:", error);
+
+    return res.status(500).json({
+      message: "Failed to create teacher",
+      error,
+    });
+  }
+};
+
+// ===============================
+// TEACHER LOGIN
+// ===============================
+export const loginTeacher = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    const normalizedEmail =
+      typeof email === "string" ? email.trim().toLowerCase() : "";
+    if (!normalizedEmail || !password) {
+      return res.status(400).json({
+        message: "Email and password are required",
       });
     }
 
-    res.status(500).json({
-      message: "Failed to create teacher",
-    });
-  }
-};
-
-// Get All Teachers
-export const getTeachers = async (
-  _req: Request,
-  res: Response
-) => {
-  try {
-    const result = await prisma.teacher.findMany({
-      orderBy: { joinedAt: "desc" },
-      include: {
-        subject: true,
+    // Find teacher
+    const teacher = await prisma.teacher.findFirst({
+      where: {
         user: {
-          select: {
-            id: true,
-            email: true,
-            username: true,
-          },
+          email: normalizedEmail,
+          role: "TEACHER",
         },
+      },
+      include: {
+        user: true,
       },
     });
 
-    res.json({ result });
-  } catch {
-    res.status(500).json({
-      message: "Failed to get teachers",
+    if (!teacher) {
+      return res.status(401).json({
+        message: "Invalid username or password",
+      });
+    }
+
+    // Check password
+    const isPasswordCorrect =
+      (await hashpass.compare(password, teacher.user.password)) ||
+      (await hashpass.compare(password, teacher.password));
+
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        message: "Invalid username or password",
+      });
+    }
+
+    // Generate JWT
+    const token = generateToken({
+      id: teacher.user.id,
+      email: teacher.user.email,
+      role: teacher.user.role,
+    });
+
+    return res.status(200).json({
+      message: "Teacher login successful",
+
+      token,
+
+      teacher: {
+        id: teacher.id,
+        userId: teacher.userId,
+        fullName: teacher.fullName,
+        gender: teacher.gender,
+        dob: teacher.dob,
+        phone: teacher.phone,
+        address: teacher.address,
+        joinedAt: teacher.joinedAt,
+        basicSalary: teacher.basicSalary,
+        allowance: teacher.allowance,
+        arrivalTime: teacher.arrivalTime,
+        email: teacher.user.email,
+        username: teacher.user.username,
+        role: teacher.user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Teacher Login Error:", error);
+
+    return res.status(500).json({
+      message: "Teacher login failed",
+      error,
     });
   }
 };
 
-// Get Single Teacher
+// ===============================
+// GET ALL TEACHERS
+// ===============================
+export const getAllTeachers = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const teachers = await prisma.teacher.findMany({
+      include: {
+        user: true,
+        subjects: {
+          include: {
+            subject: true,
+          },
+        },
+        classrooms: true,
+        payrolls: true,
+        attendances: true,
+      },
+      orderBy: {
+        joinedAt: "desc",
+      },
+    });
+
+    const data = teachers.map((teacher) => ({
+      id: teacher.id,
+      userId: teacher.userId,
+      fullName: teacher.fullName,
+      gender: teacher.gender,
+      dob: teacher.dob,
+      phone: teacher.phone,
+      address: teacher.address,
+      joinedAt: teacher.joinedAt,
+      basicSalary: teacher.basicSalary,
+      allowance: teacher.allowance,
+      arrivalTime: teacher.arrivalTime,
+
+      email: teacher.user.email,
+      username: teacher.user.username,
+      role: teacher.user.role,
+      user: {
+        email: teacher.user.email,
+        username: teacher.user.username,
+      },
+
+      subjects: teacher.subjects,
+      classrooms: teacher.classrooms,
+      payrolls: teacher.payrolls,
+      attendances: teacher.attendances,
+    }));
+
+    return res.status(200).json({
+      message: "Teachers fetched successfully",
+      count: data.length,
+      teachers: data,
+    });
+  } catch (error) {
+    console.error("Get All Teachers Error:", error);
+
+    return res.status(500).json({
+      message: "Failed to get teachers",
+      error,
+    });
+  }
+};
+
+// ===============================
+// GET ONE TEACHER
+// ===============================
 export const getTeacher = async (
   req: Request,
   res: Response
 ) => {
   try {
+    const id = String(req.params.id);
+
     const teacher = await prisma.teacher.findUnique({
       where: {
-        id: String(req.params.id),
+        id,
       },
       include: {
-        subject: true,
-        user: {
-          select: {
-            id: true,
-            email: true,
-            username: true,
+        user: true,
+        subjects: {
+          include: {
+            subject: true,
           },
         },
+        classrooms: true,
+        payrolls: true,
+        attendances: true,
       },
     });
 
@@ -153,21 +364,59 @@ export const getTeacher = async (
       });
     }
 
-    res.json({ teacher });
-  } catch {
-    res.status(500).json({
+    return res.status(200).json({
+      message: "Teacher fetched successfully",
+
+      teacher: {
+        id: teacher.id,
+        userId: teacher.userId,
+        fullName: teacher.fullName,
+        gender: teacher.gender,
+        dob: teacher.dob,
+        phone: teacher.phone,
+        address: teacher.address,
+        joinedAt: teacher.joinedAt,
+        basicSalary: teacher.basicSalary,
+        allowance: teacher.allowance,
+        arrivalTime: teacher.arrivalTime,
+
+        email: teacher.user.email,
+        username: teacher.user.username,
+        role: teacher.user.role,
+        user: {
+          email: teacher.user.email,
+          username: teacher.user.username,
+        },
+
+        subjects: teacher.subjects,
+        classrooms: teacher.classrooms,
+        payrolls: teacher.payrolls,
+        attendances: teacher.attendances,
+      },
+    });
+  } catch (error) {
+    console.error("Get Teacher Error:", error);
+
+    return res.status(500).json({
       message: "Failed to get teacher",
+      error,
     });
   }
 };
 
-// Update Teacher
+// ===============================
+// UPDATE TEACHER
+// ===============================
 export const updateTeacher = async (
   req: Request,
   res: Response
 ) => {
   try {
+    const id = String(req.params.id);
+
     const {
+      email,
+      username,
       fullName,
       gender,
       dob,
@@ -176,61 +425,189 @@ export const updateTeacher = async (
       password,
       basicSalary,
       allowance,
-      subjectId,
       arrivalTime,
+      subjectIds,
     } = req.body;
 
-    const teacher = await prisma.teacher.update({
+    // Find teacher
+    const existingTeacher = await prisma.teacher.findUnique({
       where: {
-        id: String(req.params.id),
+        id,
       },
-      data: {
-        ...(fullName !== undefined && { fullName }),
-        ...(gender !== undefined && { gender }),
-        ...(dob !== undefined && {
-          dob: new Date(dob),
-        }),
-        ...(phone !== undefined && { phone }),
-        ...(address !== undefined && { address }),
-        ...(password && {
-          password: hashpass.hashSync(password, 10),
-        }),
-        ...(basicSalary !== undefined && Number.isFinite(Number(basicSalary)) && {
-          basicSalary: Number(basicSalary),
-        }),
-        ...(allowance !== undefined && Number.isFinite(Number(allowance)) && {
-          allowance: Number(allowance),
-        }),
-        ...(subjectId !== undefined && { subjectId: subjectId || null }),
-        ...(arrivalTime !== undefined && {
-          arrivalTime:
-            typeof arrivalTime === "string" && /^\d{2}:\d{2}$/.test(arrivalTime)
-              ? arrivalTime
-              : null,
-        }),
+      include: {
+        user: true,
       },
     });
 
-    res.json({ teacher });
-  } catch {
-    res.status(500).json({
+    if (!existingTeacher) {
+      return res.status(404).json({
+        message: "Teacher not found",
+      });
+    }
+
+    // Prepare teacher data
+    const teacherData: any = {};
+
+    if (fullName !== undefined) {
+      teacherData.fullName = fullName;
+    }
+
+    if (gender !== undefined) {
+      teacherData.gender = gender;
+    }
+
+    if (dob !== undefined) {
+      teacherData.dob = new Date(dob);
+    }
+
+    if (phone !== undefined) {
+      teacherData.phone = phone;
+    }
+
+    if (address !== undefined) {
+      teacherData.address = address;
+    }
+
+    if (basicSalary !== undefined) {
+      teacherData.basicSalary = Number(basicSalary);
+    }
+
+    if (allowance !== undefined) {
+      teacherData.allowance = Number(allowance);
+    }
+
+    if (arrivalTime !== undefined) {
+      teacherData.arrivalTime = arrivalTime;
+    }
+
+    if (subjectIds !== undefined) {
+      if (!Array.isArray(subjectIds) || subjectIds.length === 0) {
+        return res.status(400).json({
+          message: "Select at least one teaching subject",
+        });
+      }
+
+      const selectedSubjectIds = [...new Set(subjectIds)];
+      const availableSubjects = await prisma.subject.findMany({
+        where: {
+          id: {
+            in: selectedSubjectIds,
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (availableSubjects.length !== selectedSubjectIds.length) {
+        return res.status(400).json({
+          message: "One or more selected subjects were not found",
+        });
+      }
+
+      teacherData.subjects = {
+        deleteMany: {},
+        create: selectedSubjectIds.map((subjectId: string) => ({
+          subject: {
+            connect: {
+              id: subjectId,
+            },
+          },
+        })),
+      };
+    }
+
+    // Update password
+    if (password) {
+      const hashedPassword = await hashpass.hash(password, 10);
+
+      teacherData.password = hashedPassword;
+
+      await prisma.user.update({
+        where: {
+          id: existingTeacher.userId,
+        },
+        data: {
+          password: hashedPassword,
+        },
+      });
+    }
+
+    // Update User
+    const userData: any = {};
+
+    if (email !== undefined) {
+      userData.email = email;
+    }
+
+    if (username !== undefined) {
+      userData.username = username;
+    }
+
+    if (Object.keys(userData).length > 0) {
+      await prisma.user.update({
+        where: {
+          id: existingTeacher.userId,
+        },
+        data: userData,
+      });
+    }
+
+    // Update Teacher
+    const updatedTeacher = await prisma.teacher.update({
+      where: {
+        id,
+      },
+      data: teacherData,
+      include: {
+        user: true,
+      },
+    });
+
+    return res.status(200).json({
+      message: "Teacher updated successfully",
+
+      teacher: {
+        id: updatedTeacher.id,
+        userId: updatedTeacher.userId,
+        fullName: updatedTeacher.fullName,
+        gender: updatedTeacher.gender,
+        dob: updatedTeacher.dob,
+        phone: updatedTeacher.phone,
+        address: updatedTeacher.address,
+        joinedAt: updatedTeacher.joinedAt,
+        basicSalary: updatedTeacher.basicSalary,
+        allowance: updatedTeacher.allowance,
+        arrivalTime: updatedTeacher.arrivalTime,
+
+        email: updatedTeacher.user.email,
+        username: updatedTeacher.user.username,
+        role: updatedTeacher.user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Update Teacher Error:", error);
+
+    return res.status(500).json({
       message: "Failed to update teacher",
+      error,
     });
   }
 };
 
-// Delete Teacher
+// ===============================
+// DELETE TEACHER
+// ===============================
 export const deleteTeacher = async (
   req: Request,
   res: Response
 ) => {
   try {
+    const id = String(req.params.id);
+
     const teacher = await prisma.teacher.findUnique({
       where: {
-        id: String(req.params.id),
-      },
-      select: {
-        userId: true,
+        id,
       },
     });
 
@@ -240,18 +617,23 @@ export const deleteTeacher = async (
       });
     }
 
+    // Because User relation has onDelete: Cascade,
+    // deleting User will also delete Teacher.
     await prisma.user.delete({
       where: {
         id: teacher.userId,
       },
     });
 
-    res.json({
+    return res.status(200).json({
       message: "Teacher deleted successfully",
     });
-  } catch {
-    res.status(500).json({
+  } catch (error) {
+    console.error("Delete Teacher Error:", error);
+
+    return res.status(500).json({
       message: "Failed to delete teacher",
+      error,
     });
   }
 };

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
+import { useTheme } from "@/components/theme-provider"
 import {
   Bell,
   BookOpen,
@@ -93,7 +93,6 @@ const studentNavigation = [
 const teacherNavigation = [
   { label: "Exams", icon: ClipboardList, href: "/dashboud/exams" },
   { label: "Exam Results", icon: FileText, href: "/dashboud/results" },
-  { label: "Attendance", icon: CheckCircle2, href: "/dashboud/attendance" },
 ]
 
 export default function DashboardPage() {
@@ -127,7 +126,7 @@ export default function DashboardPage() {
         ? adminNavigation
         : studentNavigation
   const navigation =
-    isAdmin || !user?.permissions?.length
+    isTeacher || isAdmin || !user?.permissions?.length
       ? baseNavigation
       : baseNavigation.filter(
           (item) =>

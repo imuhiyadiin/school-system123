@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { Download, Plus, Upload, X } from "lucide-react"
 import { apiClient } from "@/services/api/client"
 import { DataTable, type DataTableColumn } from "../components/DataTable"
@@ -16,7 +17,7 @@ type Option = {
   studentID?: string
   section?: string
   grade?: number
-  subject?: { name?: string }
+  subject?: { name?: string; grade?: number }
   classrooms?: Array<{ classroomId?: string }>
 }
 type Setup = { classId: string; examId: string }
@@ -94,6 +95,9 @@ const uniqueResultRows = (records: RecordItem[]) => [
 ]
 
 export default function ResultsPage() {
+  const searchParams = useSearchParams()
+  const linkedClassId = searchParams.get("classId") ?? ""
+  const linkedExamId = searchParams.get("examId") ?? ""
   const [results, setResults] = useState<RecordItem[]>([])
   const [classrooms, setClassrooms] = useState<Option[]>([])
   const [students, setStudents] = useState<Option[]>([])
@@ -113,6 +117,7 @@ export default function ResultsPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState("")
+  const [linkedEntryInitialized, setLinkedEntryInitialized] = useState(false)
   const load = async () => {
     setLoading(true)
     setError("")
@@ -146,6 +151,52 @@ export default function ResultsPage() {
       ),
     [students, setup.classId]
   )
+  useEffect(() => {
+    if (loading || !linkedClassId || !linkedExamId || linkedEntryInitialized) return
+    const classroomExists = classrooms.some((item) => item.id === linkedClassId)
+    const examExists = exams.some((item) => item.id === linkedExamId)
+    if (!classroomExists || !examExists) {
+      setError("The selected class or exam is not available for your account.")
+      setLinkedEntryInitialized(true)
+      return
+    }
+    setSetup({ classId: linkedClassId, examId: linkedExamId })
+    setSelectedTableExamId(linkedExamId)
+    setOpen(true)
+    setLinkedEntryInitialized(true)
+  }, [
+    classrooms,
+    exams,
+    linkedClassId,
+    linkedEntryInitialized,
+    linkedExamId,
+    loading,
+  ])
+  useEffect(() => {
+    if (
+      !linkedEntryInitialized ||
+      setup.classId !== linkedClassId ||
+      setup.examId !== linkedExamId ||
+      !open ||
+      step !== "setup"
+    ) return
+    if (!classStudents.length) {
+      setError("No students were found in this classroom.")
+      return
+    }
+    setMarks(Object.fromEntries(classStudents.map((student) => [student.id, ""])))
+    setAbsent({})
+    setStep("marks")
+  }, [
+    classStudents,
+    linkedClassId,
+    linkedEntryInitialized,
+    linkedExamId,
+    open,
+    setup.classId,
+    setup.examId,
+    step,
+  ])
   const filteredResults = useMemo(
     () =>
       results.filter(
@@ -798,6 +849,15 @@ const examTypeName = (type?: string) =>
     QUIZ: "Quiz",
   })[type ?? ""] ?? type ?? "Other"
 
+const examOptionLabel = (exam: Option) =>
+  [
+    exam.name ?? "Exam",
+    exam.subject?.name,
+    exam.subject?.grade ? `Grade ${exam.subject.grade}` : undefined,
+  ]
+    .filter(Boolean)
+    .join(" · ")
+
 function ExamSelect({
   label,
   value,
@@ -845,8 +905,8 @@ function ExamSelect({
         className="mt-1 flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-left font-normal outline-none transition focus:border-blue-500"
       >
         <span className={selected ? "text-slate-900" : "text-slate-500"}>
-          {selected
-            ? `${selected.name ?? "Exam"} (${examTypeName(selected.type)})`
+        {selected
+            ? `${examOptionLabel(selected)} (${examTypeName(selected.type)})`
             : "Select Exam"}
         </span>
         <span className="text-slate-500">⌄</span>
@@ -890,7 +950,7 @@ function ExamSelect({
                             }}
                             className={`block w-full rounded-md px-2 py-1.5 text-left text-sm transition hover:bg-blue-50 ${exam.id === value ? "bg-blue-600 font-semibold text-white hover:bg-blue-600" : "text-slate-700"}`}
                           >
-                            {exam.name ?? "Exam"}
+                            {examOptionLabel(exam)}
                           </button>
                         ))}
                       </div>

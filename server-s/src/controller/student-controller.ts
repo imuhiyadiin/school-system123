@@ -182,7 +182,12 @@ export const getStudents = async (_req: Request, res: Response) => {
           bus: true,
         },
       });
-    res.json({ result: students });
+    res.json({
+      result: students.map(({ password, ...student }) => {
+        void password;
+        return student;
+      }),
+    });
   } catch {
     res.status(500).json({
       message: "Failed to get students",
@@ -206,6 +211,7 @@ export const getStudent = async (req: Request, res: Response) => {
             classroom: true,
           },
         },
+        bus: true,
       },
     });
 
@@ -216,7 +222,9 @@ export const getStudent = async (req: Request, res: Response) => {
       });
     }
 
-    res.json({ student });
+    const { password, ...studentData } = student;
+    void password;
+    res.json({ student: studentData });
 
   } catch {
     res.status(500).json({

@@ -2,7 +2,11 @@ import { CrudPage } from "../components/CrudPage"
 import type { DataTableColumn } from "../components/DataTable"
 
 const columns: DataTableColumn[] = [
-  { key: "name", label: "Exam name" },
+  {
+    key: "name",
+    label: "Exam name",
+    linkTo: "/dashboud/exams",
+  },
   { key: "subject", label: "Subject" },
   { key: "type", label: "Exam type" },
   { key: "total", label: "Total marks" },

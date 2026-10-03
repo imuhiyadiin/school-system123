@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
-import { useTheme } from "next-themes"
+import { useTheme } from "@/components/theme-provider"
 import { useSelector } from "react-redux"
 import {
   Award,
@@ -56,7 +56,7 @@ const Header = () => {
   const pathname = usePathname()
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth)
 
-  if (pathname === "/dashboud") {
+  if (pathname.startsWith("/dashboud")) {
     return null
   }
 
@@ -87,8 +87,7 @@ const Header = () => {
           aria-label="Primary navigation"
         >
           <NavLink href="/#home">Home</NavLink>
-          <NavLink href="/about">About</NavLink>
-          <NavLink href="/contact">Contact</NavLink>
+          <NavLink href="/studenLogin">Student Login</NavLink>
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
@@ -131,13 +130,8 @@ const Header = () => {
               onClick={() => setMobileMenuOpen(false)}
             />
             <MobileLink
-              href="/about"
-              label="About"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            <MobileLink
-              href="/contact"
-              label="Contact"
+              href="/studenLogin"
+              label="Student Login"
               onClick={() => setMobileMenuOpen(false)}
             />
             <div className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-800"><ThemeToggle mobile /></div>

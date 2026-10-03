@@ -7,6 +7,32 @@ import Header from "./sections/Header";
 import Footer from "./sections/Footer";
 import ReduxProvider from "./redux-provider"
 import { Toaster } from "sonner"
+import type { Metadata, Viewport } from "next"
+import PwaRegister from "./pwa-register"
+
+export const metadata: Metadata = {
+  applicationName: "Creative Readers",
+  title: "Creative Readers | School Management",
+  description: "Creative Readers school management system",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Creative Readers",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+}
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#f8fafc",
+}
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'})
 
@@ -29,6 +55,7 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <ReduxProvider>
+            <PwaRegister />
             <Header />
             {children}
             <Footer />

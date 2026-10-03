@@ -53,19 +53,21 @@ export const loadStudentDashboard = createAsyncThunk("studentDashboard/load", as
     const [attendance, results, exams, subjects, timetable, notices] = await Promise.all([
       apiClient.get<Attendance[]>(`/attendance/student/${studentId}`),
       apiClient.get<Result[]>(`/result/student/${studentId}`),
-      apiClient.get<{ result: Exam[] }>("/exam"),
-      apiClient.get<{ result: Subject[] }>("/subject"),
+      apiClient.get<{ exams?: Exam[] }>("/exam"),
+      apiClient.get<{ subjects?: Subject[] }>("/subject"),
       apiClient.get<Timetable[]>("/timetable"),
       apiClient.get<Issue[]>("/issue"),
     ])
+    const examRecords = Array.isArray(exams.data.exams) ? exams.data.exams : []
+    const subjectRecords = Array.isArray(subjects.data.subjects) ? subjects.data.subjects : []
     return {
       profile,
-      attendance: attendance.data,
-      results: results.data,
-      exams: exams.data.result,
-      subjects: subjects.data.result.filter((subject) => subject.grade === profile.classrooms[0]?.classroom.grade),
-      timetable: timetable.data.filter((item) => item.classroomId === classId),
-      notices: notices.data.filter((item) => item.studentId === studentId),
+      attendance: Array.isArray(attendance.data) ? attendance.data : [],
+      results: Array.isArray(results.data) ? results.data : [],
+      exams: examRecords,
+      subjects: subjectRecords.filter((subject) => subject.grade === profile.classrooms[0]?.classroom.grade),
+      timetable: (Array.isArray(timetable.data) ? timetable.data : []).filter((item) => item.classroomId === classId),
+      notices: (Array.isArray(notices.data) ? notices.data : []).filter((item) => item.studentId === studentId),
       userId,
     }
   } catch (error) {

@@ -74,6 +74,7 @@ export function Sidebar({
           const Icon = item.icon
           const active =
             pathname === item.href ||
+            pathname.startsWith(`${item.href}/`) ||
             Boolean(
               item.children?.some(
                 (child) => pathname === child.href.split("?")[0]
@@ -155,6 +156,7 @@ export function Sidebar({
           const Icon = item.icon
           const active =
             pathname === item.href ||
+            pathname.startsWith(`${item.href}/`) ||
             Boolean(
               item.children?.some(
                 (child) => pathname === child.href.split("?")[0]

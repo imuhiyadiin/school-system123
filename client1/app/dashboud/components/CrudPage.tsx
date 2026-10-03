@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { apiClient } from "@/services/api/client"
 import { Button } from "@/components/ui/button"
+import { TeacherCreateForm } from "../teachers/components/TeacherCreateForm"
 import {
   BookMarked,
   Bus,
@@ -121,13 +122,6 @@ const fields: Record<string, Field[]> = {
       required: true,
     },
     { name: "dob", label: "Date of birth", type: "date", required: true },
-    {
-      name: "subjectId",
-      label: "Teaching subject",
-      type: "select",
-      options: "/subject",
-      required: true,
-    },
     { name: "arrivalTime", label: "Arrival time", type: "time" },
     { name: "phone", label: "Phone" },
     { name: "address", label: "Address", type: "textarea" },
@@ -153,9 +147,9 @@ const fields: Record<string, Field[]> = {
   "/exam": [
     { name: "name", label: "Exam name", required: true },
     {
-      name: "subjectId",
-      label: "Subject",
-      type: "select",
+      name: "subjectIds",
+      label: "Subjects",
+      type: "multi-select",
       options: "/subject",
       required: true,
     },
@@ -334,6 +328,34 @@ const unpack = (data: unknown) => {
   )
 }
 
+const groupExamRecords = (records: Record<string, unknown>[]) => {
+  const groups = new Map<string, Record<string, unknown>[]>()
+  for (const record of records) {
+    const key = JSON.stringify([
+      record.name,
+      record.type,
+      new Date(String(record.date)).toISOString(),
+      record.total,
+      record.minMarks,
+    ])
+    groups.set(key, [...(groups.get(key) ?? []), record])
+  }
+
+  return [...groups.values()].map((group) => {
+    const subjectNames = group
+      .map((record) => {
+        const subject = record.subject as { name?: unknown } | null | undefined
+        return typeof subject?.name === "string" ? subject.name : ""
+      })
+      .filter(Boolean)
+    return {
+      ...group[0],
+      subject: subjectNames.join(", ") || "—",
+      examIds: group.map((record) => String(record.id)),
+    }
+  })
+}
+
 export function CrudPage({
   title,
   endpoint,
@@ -355,7 +377,13 @@ export function CrudPage({
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<Values>({ defaultValues: { status: true, isResolved: false } })
+  } = useForm<Values>({
+    defaultValues: {
+      status: true,
+      isResolved: false,
+      subjectIds: [],
+    },
+  })
   const [records, setRecords] = useState<Record<string, unknown>[]>([])
   const [options, setOptions] = useState<
     Record<string, Record<string, unknown>[]>
@@ -374,7 +402,15 @@ export function CrudPage({
     string,
     unknown
   > | null>(null)
-  const formFields = useMemo(() => fields[endpoint] ?? [], [endpoint])
+  const formFields = useMemo(() => {
+    const configuredFields = fields[endpoint] ?? []
+    if (endpoint !== "/exam" || !editingId) return configuredFields
+    return configuredFields.map((field) =>
+      field.name === "subjectIds"
+        ? { ...field, name: "subjectId", label: "Subject", type: "select" as const }
+        : field
+    )
+  }, [endpoint, editingId])
   const selectedClassroomId = watch("classId")
   const stats = useMemo(() => {
     const total = records.length
@@ -460,6 +496,10 @@ export function CrudPage({
             ? { key: "classrooms", label: "Classroom" }
             : field.name === "busId" && endpoint === "/students"
               ? { key: "bus", label: "Student bus" }
+              : field.name === "subjectIds" && endpoint === "/teacher"
+                ? { key: "subjects", label: field.label }
+              : field.name === "subjectIds" && endpoint === "/exam"
+                ? { key: "subject", label: field.label }
               : { key: field.name, label: field.label }
         ),
     [customColumns, endpoint, formFields]
@@ -493,7 +533,12 @@ export function CrudPage({
           data?.subjects ??
           data?.attendance ??
           [])
-      setRecords(Array.isArray(value) ? value : [])
+      const loadedRecords = Array.isArray(value) ? value : []
+      setRecords(
+        endpoint === "/exam"
+          ? groupExamRecords(loadedRecords as Record<string, unknown>[])
+          : loadedRecords
+      )
     } catch {
       setError("Unable to load records.")
     } finally {
@@ -539,12 +584,26 @@ export function CrudPage({
   const submit = async (values: Values) => {
     setError(null)
     setMessage(null)
+    if (
+      endpoint === "/exam" &&
+      !editingId &&
+      (!Array.isArray(values.subjectIds) || values.subjectIds.length === 0)
+    ) {
+      setError("Dooro ugu yaraan hal maaddo exam-ka.")
+      return
+    }
     try {
       const data = { ...values }
+      if (endpoint === "/exam" && editingId) {
+        data.subjectId = Array.isArray(values.subjectId)
+          ? values.subjectId[0] ?? ""
+          : String(values.subjectId ?? "")
+      }
       // Student IDs are generated by the API and must never come from this form.
       if (endpoint === "/students") delete data.studentID
       const wasEditing = Boolean(editingId)
       let createdStudentID = ""
+      let createdTeacher: Record<string, unknown> | null = null
       if (editingId) {
         if (endpoint === "/user") {
           await apiClient.patch(`${endpoint}/${editingId}`, {
@@ -557,10 +616,9 @@ export function CrudPage({
               : {}),
           })
         } else {
-          delete data.email
-          if (endpoint !== "/students") delete data.username
-          if (endpoint !== "/students" || !String(data.password ?? "").trim())
-            delete data.password
+          if (endpoint !== "/teacher") delete data.email
+          if (!["/students", "/teacher"].includes(endpoint)) delete data.username
+          if (!String(data.password ?? "").trim()) delete data.password
           await apiClient.patch(`${endpoint}/${editingId}`, data)
         }
       } else {
@@ -569,8 +627,16 @@ export function CrudPage({
           { studentID?: unknown } | undefined
         createdStudentID =
           typeof student?.studentID === "string" ? student.studentID : ""
+        const teacher = response.data?.teacher
+        if (
+          endpoint === "/teacher" &&
+          typeof teacher === "object" &&
+          teacher !== null
+        ) {
+          createdTeacher = teacher as Record<string, unknown>
+        }
       }
-      reset({ status: true, isResolved: false })
+      reset({ status: true, isResolved: false, subjectIds: [] })
       setEditingId(null)
       setIsFormModalOpen(false)
       setMessage(
@@ -580,7 +646,11 @@ export function CrudPage({
             ? "Updated successfully."
             : "Saved successfully."
       )
-      await load()
+      if (createdTeacher) {
+        setRecords((current) => [createdTeacher as Record<string, unknown>, ...current])
+      } else {
+        await load()
+      }
     } catch (error) {
       setError(saveErrorMessage(error))
     }
@@ -590,11 +660,21 @@ export function CrudPage({
     setIsFormModalOpen(true)
     const data: Values = {}
     formFields.forEach((field) => {
+      if (endpoint === "/exam" && field.name === "subjectIds") {
+        data.subjectId = String(record.subjectId ?? "")
+        return
+      }
       const studentClassrooms = record.classrooms as
         { classroomId?: string }[] | undefined
       const value =
         field.name === "password"
           ? ""
+          : field.name === "subjectIds" && endpoint === "/exam"
+            ? (record.subjectId ? [String(record.subjectId)] : [])
+          : field.name === "subjectIds" && endpoint === "/teacher"
+            ? (record.subjects as { subjectId?: string }[] | undefined)?.map(
+                (item) => item.subjectId ?? ""
+              ) ?? []
           : field.name === "name" && endpoint === "/user"
           ? record.username
           : field.name === "classroomId" && endpoint === "/students"
@@ -626,21 +706,45 @@ export function CrudPage({
   const removeMany = async (ids: string[]) => {
     setError(null)
     try {
+      const idsToDelete =
+        endpoint === "/exam"
+          ? records
+              .filter((record) => ids.includes(String(record.id)))
+              .flatMap((record) =>
+                Array.isArray(record.examIds)
+                  ? record.examIds.map(String)
+                  : [String(record.id)]
+              )
+          : ids
       const results = await Promise.allSettled(
-        ids.map((id) => apiClient.delete(`${endpoint}/${id}`))
+        idsToDelete.map((id) => apiClient.delete(`${endpoint}/${id}`))
       )
       const failed = results.filter(
         (result) => result.status === "rejected"
       ).length
       setMessage(
         failed
-          ? `${ids.length - failed} record(s) deleted; ${failed} could not be deleted.`
-          : `${ids.length} record(s) deleted successfully.`
+          ? `${idsToDelete.length - failed} record(s) deleted; ${failed} could not be deleted.`
+          : `${idsToDelete.length} record(s) deleted successfully.`
       )
       if (failed) setError("Some selected records could not be deleted.")
       await load()
     } catch {
       setError("Unable to delete selected records.")
+    }
+  }
+  const removeExamGroup = async (record: Record<string, unknown>) => {
+    const ids = Array.isArray(record.examIds)
+      ? record.examIds.map(String)
+      : [String(record.id)]
+    if (!confirm(`Delete this exam for all ${ids.length} selected subject(s)?`)) return
+    setError(null)
+    try {
+      await Promise.all(ids.map((id) => apiClient.delete(`${endpoint}/${id}`)))
+      setMessage("Exam and its subject records deleted successfully.")
+      await load()
+    } catch {
+      setError("Unable to delete this exam group.")
     }
   }
   const updateManyClassrooms = async (ids: string[], classroomId: string) => {
@@ -692,7 +796,7 @@ export function CrudPage({
             type="button"
             size="lg"
             onClick={() => {
-              reset({ status: true, isResolved: false })
+              reset({ status: true, isResolved: false, subjectIds: [] })
               setEditingId(null)
               setIsFormModalOpen(true)
             }}
@@ -773,6 +877,17 @@ export function CrudPage({
               className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/40 p-4 backdrop-blur-sm sm:p-6"
             >
               <div className="mx-auto flex min-h-full max-w-6xl items-center">
+                {endpoint === "/teacher" && !editingId ? (
+                  <TeacherCreateForm
+                    error={error}
+                    onCancel={() => {
+                      reset({ status: true, isResolved: false, subjectIds: [] })
+                      setEditingId(null)
+                      setIsFormModalOpen(false)
+                    }}
+                    onSubmit={submit}
+                  />
+                ) : (
                 <form
                   onSubmit={handleSubmit(submit)}
                   className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl"
@@ -797,7 +912,7 @@ export function CrudPage({
                       <button
                         type="button"
                         onClick={() => {
-                          reset({ status: true, isResolved: false })
+                          reset({ status: true, isResolved: false, subjectIds: [] })
                           setEditingId(null)
                           setIsFormModalOpen(false)
                         }}
@@ -836,7 +951,7 @@ export function CrudPage({
                             >
                               {field.label}
                               {field.required &&
-                                !(editingId && ["/students", "/user"].includes(endpoint) && field.name === "password") && (
+                                !(editingId && ["/students", "/user", "/teacher"].includes(endpoint) && field.name === "password") && (
                                 <span className="ml-1 text-rose-500">*</span>
                               )}
                             </span>
@@ -845,18 +960,51 @@ export function CrudPage({
                                 className="mt-2 block max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3"
                               >
                                 <input type="hidden" {...register(field.name)} />
-                                {field.values?.map((value) => {
+                                {endpoint === "/exam" && field.name === "subjectIds" && (
+                                  <div className="mb-2 flex justify-between border-b border-slate-100 pb-2 text-xs">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setValue(
+                                          field.name,
+                                          (options[field.options ?? ""] ?? []).map((item) => String(item.id)),
+                                          { shouldDirty: true, shouldValidate: true }
+                                        )
+                                      }
+                                      className="font-semibold text-blue-700 hover:underline"
+                                    >
+                                      Select all subjects
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setValue(field.name, [], {
+                                          shouldDirty: true,
+                                          shouldValidate: true,
+                                        })
+                                      }
+                                      className="text-slate-500 hover:underline"
+                                    >
+                                      Clear
+                                    </button>
+                                  </div>
+                                )}
+                                {(field.options
+                                  ? (options[field.options] ?? []).map((item) => ({ value: String(item.id), label: label(item) }))
+                                  : (field.values ?? []).map((value) => ({ value, label: value }))
+                                ).map(({ value, label: optionLabel }) => {
                                   const current = Array.isArray(watch(field.name))
                                     ? (watch(field.name) as string[])
                                     : []
                                   const selected = current.includes(value)
                                   return (
-                                    <label
+                                    <div
                                       key={value}
                                       className="flex cursor-pointer items-center gap-2 py-1 text-sm text-slate-700"
                                     >
                                       <input
                                         type="checkbox"
+                                        aria-label={optionLabel}
                                         checked={selected}
                                         onChange={() =>
                                         setValue(
@@ -870,12 +1018,8 @@ export function CrudPage({
                                         }
                                         className="h-4 w-4 rounded border-slate-300 accent-blue-600"
                                       />
-                                      {value
-                                        .replace("/dashboud/", "")
-                                        .replace(/(^|-)\w/g, (letter) =>
-                                          letter.toUpperCase()
-                                        )}
-                                    </label>
+                                      <span>{optionLabel}</span>
+                                    </div>
                                   )
                                 })}
                               </span>
@@ -988,13 +1132,13 @@ export function CrudPage({
                                 {...register(field.name, {
                                   required:
                                     field.required &&
-                                    !(editingId && ["/students", "/user"].includes(endpoint) && field.name === "password"),
+                                    !(editingId && ["/students", "/user", "/teacher"].includes(endpoint) && field.name === "password"),
                                   valueAsNumber: field.type === "number",
                                 })}
                                 placeholder={
                                   field.type === "date"
                                     ? undefined
-                                    : editingId && ["/students", "/user"].includes(endpoint) && field.name === "password"
+                                    : editingId && ["/students", "/user", "/teacher"].includes(endpoint) && field.name === "password"
                                       ? "Leave blank to keep the current password"
                                     : `Enter ${field.label.toLowerCase()}`
                                 }
@@ -1030,7 +1174,7 @@ export function CrudPage({
                           type="button"
                           onClick={() => {
                             setEditingId(null)
-                            reset({ status: true, isResolved: false })
+                            reset({ status: true, isResolved: false, subjectIds: [] })
                             setIsFormModalOpen(false)
                           }}
                           className="rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-medium hover:bg-slate-50"
@@ -1041,6 +1185,7 @@ export function CrudPage({
                     </div>
                   </div>
                 </form>
+                )}
               </div>
             </div>
           )}
@@ -1080,8 +1225,12 @@ export function CrudPage({
               filterFields={filterFields}
               showExport={false}
               classroomFilterKey={classroomFilterKey}
-              onEdit={edit}
-              onDelete={(record) => void remove(String(record.id))}
+              onEdit={endpoint === "/exam" ? undefined : edit}
+              onDelete={(record) =>
+                endpoint === "/exam"
+                  ? void removeExamGroup(record)
+                  : void remove(String(record.id))
+              }
               onBulkDelete={(ids) => void removeMany(ids)}
               classroomOptions={
                 endpoint === "/students"
@@ -1183,6 +1332,10 @@ function StudentDetails({
       }>
     | undefined
   const classroom = classrooms?.[0]?.classroom
+  const bus = student.bus as
+    | { fullName?: unknown; vehiclePlate?: unknown; location?: unknown }
+    | null
+    | undefined
   const value = (key: string) => {
     const item = student[key]
     if (item === null || item === undefined || item === "") return "—"
@@ -1196,6 +1349,8 @@ function StudentDetails({
     ["Mobile Number", value("phone")],
     ["Parent Name", value("parentName")],
     ["Parent Phone", value("parentPhone")],
+    ["Student bus", bus?.fullName ? String(bus.fullName) : "—"],
+    ["Password", "Hidden for security"],
     ["Total Fee", value("totalFee")],
     ["Admission Date", value("admissionDate")],
   ]
@@ -1306,9 +1461,8 @@ function TeacherDetails({
   teacher: Record<string, unknown>
   onClose: () => void
 }) {
-  const subject = teacher.subject as
-    | { name?: unknown; grade?: unknown }
-    | null
+  const subjects = teacher.subjects as
+    | Array<{ subject?: { name?: unknown; grade?: unknown } }>
     | undefined
   const user = teacher.user as
     | { email?: unknown; username?: unknown }
@@ -1321,8 +1475,15 @@ function TeacherDetails({
     const parsed = new Date(value)
     return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleDateString()
   }
-  const subjectName = subject?.name
-    ? `${display(subject.name)}${subject.grade ? ` (Grade ${display(subject.grade)})` : ""}`
+  const subjectName = subjects?.length
+    ? subjects
+        .map(({ subject }) =>
+          subject?.name
+            ? `${display(subject.name)}${subject.grade ? ` (Grade ${display(subject.grade)})` : ""}`
+            : ""
+        )
+        .filter(Boolean)
+        .join(", ") || "—"
     : "—"
   const information = [
     ["Full name", display(teacher.fullName)],

@@ -16,7 +16,7 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    const isLoginRequest = ["/auth/login", "/student/login"].includes(error.config?.url)
+    const isLoginRequest = ["/auth/login", "/student/login", "/teacher/login"].includes(error.config?.url ?? "")
 
     if (typeof window !== "undefined" && error.response?.status === 401 && !isLoginRequest) {
       localStorage.removeItem("auth-token")

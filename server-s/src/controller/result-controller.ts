@@ -1,5 +1,15 @@
 import prisma from "../lip/prisma";
 import { Request, Response } from "express";
+import type { AuthRequest } from "../middelwere/auth";
+
+const teacherIdForRequest = async (req: AuthRequest) => {
+  if (req.user?.role !== "TEACHER") return null;
+  const teacher = await prisma.teacher.findUnique({
+    where: { userId: req.user.id },
+    select: { id: true },
+  });
+  return teacher?.id ?? "";
+};
 
 const resultInclude = {
   student: true,
@@ -26,7 +36,7 @@ const uniqueResults = <T extends { studentId: string; subjectId: string; schoolY
     result,
   ])).values()];
 
-export const createResult = async (req: Request, res: Response) => {
+export const createResult = async (req: AuthRequest, res: Response) => {
   try {
     const {
       studentId,
@@ -43,6 +53,14 @@ export const createResult = async (req: Request, res: Response) => {
       return res.status(400).json({
         message: "Fill required data",
       });
+    }
+
+    const teacherId = await teacherIdForRequest(req);
+    if (teacherId === "") {
+      return res.status(403).json({ message: "Teacher account was not found." });
+    }
+    if (teacherId && !examId) {
+      return res.status(400).json({ message: "Choose an existing exam to enter marks." });
     }
 
     let resultExamId = examId;
@@ -67,6 +85,38 @@ export const createResult = async (req: Request, res: Response) => {
     });
     if (!selectedExam) {
       return res.status(400).json({ message: "Selected exam was not found." });
+    }
+    if (subjectId && selectedExam.subjectId && subjectId !== selectedExam.subjectId) {
+      return res.status(400).json({ message: "The subject does not match the selected exam." });
+    }
+
+    if (teacherId) {
+      if (!selectedExam.subjectId || !classroom) {
+        return res.status(403).json({ message: "Choose a valid class and your assigned subject exam." });
+      }
+      const [assignment, studentInClass] = await Promise.all([
+        prisma.teacherSubject.findUnique({
+          where: {
+            teacherId_subjectId: {
+              teacherId,
+              subjectId: selectedExam.subjectId,
+            },
+          },
+          select: { teacherId: true },
+        }),
+        prisma.classroomStudent.findUnique({
+          where: {
+            classroomId_studentId: { classroomId: classId, studentId },
+          },
+          select: { studentId: true },
+        }),
+      ]);
+      if (!assignment) {
+        return res.status(403).json({ message: "You can only enter marks for your assigned subjects." });
+      }
+      if (!studentInClass) {
+        return res.status(400).json({ message: "The selected student is not in this classroom." });
+      }
     }
     const marksError = validateMarks(marks, selectedExam.total);
     if (marksError) {
@@ -133,9 +183,16 @@ export const createResult = async (req: Request, res: Response) => {
   }
 };
 
-export const getResults = async (_req: Request, res: Response) => {
+export const getResults = async (req: AuthRequest, res: Response) => {
   try {
+    const teacherId = await teacherIdForRequest(req);
+    if (teacherId === "") {
+      return res.status(403).json({ message: "Teacher account was not found." });
+    }
     const results = await prisma.result.findMany({
+      where: teacherId
+        ? { subject: { teachers: { some: { teacherId } } } }
+        : undefined,
       orderBy: { id: "desc" },
       include: resultInclude,
     });
@@ -152,8 +209,12 @@ export const getResults = async (_req: Request, res: Response) => {
   }
 };
 
-export const getResult = async (req: Request, res: Response) => {
+export const getResult = async (req: AuthRequest, res: Response) => {
   try {
+    const teacherId = await teacherIdForRequest(req);
+    if (teacherId === "") {
+      return res.status(403).json({ message: "Teacher account was not found." });
+    }
     const id = String(req.params.id);
     const result = await prisma.result.findUnique({
       where: { id },
@@ -163,6 +224,20 @@ export const getResult = async (req: Request, res: Response) => {
     if (!result) {
       return res.status(404).json({
         message: "Result not found",
+      });
+    }
+
+    if (
+      teacherId &&
+      !(await prisma.teacherSubject.findUnique({
+        where: {
+          teacherId_subjectId: { teacherId, subjectId: result.subjectId },
+        },
+        select: { teacherId: true },
+      }))
+    ) {
+      return res.status(403).json({
+        message: "You can only view results for your assigned subjects.",
       });
     }
 
@@ -289,11 +364,18 @@ export const studentResults = async (req: Request, res: Response) => {
   }
 };
 
-export const classResults = async (req: Request, res: Response) => {
+export const classResults = async (req: AuthRequest, res: Response) => {
   try {
+    const teacherId = await teacherIdForRequest(req);
+    if (teacherId === "") {
+      return res.status(403).json({ message: "Teacher account was not found." });
+    }
     const results = await prisma.result.findMany({
       where: {
         classId: String(req.params.classId),
+        ...(teacherId
+          ? { subject: { teachers: { some: { teacherId } } } }
+          : {}),
       },
       orderBy: { id: "desc" },
       include: resultInclude,

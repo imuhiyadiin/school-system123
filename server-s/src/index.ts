@@ -26,12 +26,13 @@ const app = express();
 dotenv.config();
  
 app.use(express.json());
-const PORT = 8000;
+const PORT = Number(process.env.PORT ?? 8000);
 
 app.use(cors());
 app.use("/api", (req, res, next) => {
-  const publicPaths = ["/user/register", "/auth/register", "/user/login", "/auth/login", "/user/logout", "/auth/logout", "/user/student-login", "/auth/student-login", "/student/login", "/students/login"];
-  if (publicPaths.includes(req.path)) return next();
+  const publicPaths = ["/user/register", "/auth/register", "/user/login", "/auth/login", "/user/logout", "/auth/logout", "/user/student-login", "/auth/student-login", "/student/login", "/students/login", "/teacher/login"];
+  const requestPath = req.originalUrl.replace(/^\/api/, "").split("?")[0];
+  if (publicPaths.includes(req.path) || publicPaths.includes(requestPath)) return next();
   return verifyToken(req, res, () => requireApiPermission(req, res, next));
 });
 app.use("/api/user", userRouter);
