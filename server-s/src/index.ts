@@ -36,6 +36,15 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Vercel catch-all functions can pass the path with or without the /api prefix.
+// Normalize both forms before Express route matching.
+app.use((req, _res, next) => {
+  if (req.path === "/api" || req.path.startsWith("/api/")) return next();
+  req.url = `/api${req.url.startsWith("/") ? "" : "/"}${req.url}`;
+  next();
+});
+
 app.use("/api", (req, res, next) => {
   const publicPaths = ["/user/register", "/auth/register", "/user/login", "/auth/login", "/user/logout", "/auth/logout", "/user/student-login", "/auth/student-login", "/student/login", "/students/login", "/teacher/login"];
   const requestPath = req.originalUrl.replace(/^\/api/, "").split("?")[0];

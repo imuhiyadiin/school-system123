@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const timeable_controller_1 = require("../controller/timeable-controller");
+const auth_1 = require("../middelwere/auth");
+const router = (0, express_1.Router)();
+router.post("/", timeable_controller_1.createTimetable);
+router.get("/", auth_1.verifyToken, auth_1.requireStudent, timeable_controller_1.getTimetables);
+router.get("/:id", timeable_controller_1.getTimetable);
+router.patch("/:id", timeable_controller_1.updateTimetable);
+router.delete("/:id", timeable_controller_1.deleteTimetable);
+exports.default = router;

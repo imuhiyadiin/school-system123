@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const essue_controlles_1 = require("../controller/essue-controlles");
+const auth_1 = require("../middelwere/auth");
+const router = (0, express_1.Router)();
+router.post("/", essue_controlles_1.createIssue);
+router.get("/", auth_1.verifyToken, essue_controlles_1.getIssues);
+router.get("/:id", essue_controlles_1.getIssue);
+router.patch("/:id", essue_controlles_1.updateIssue);
+router.patch("/:id/resolve", essue_controlles_1.resolveIssue);
+router.delete("/:id", essue_controlles_1.deleteIssue);
+exports.default = router;

@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const student_controller_1 = require("../controller/student-controller");
+const auth_1 = require("../middelwere/auth");
+const router = (0, express_1.Router)();
+router.post("/", student_controller_1.createStudent);
+router.post("/login", student_controller_1.studentLogin);
+router.get("/", student_controller_1.getStudents);
+router.get("/:id/overview", auth_1.verifyToken, auth_1.requireDashboardAccess, student_controller_1.getStudentOverview);
+router.get("/:id", auth_1.verifyToken, auth_1.requireStudent, auth_1.requireOwnStudent, student_controller_1.getStudent);
+router.patch("/:id", student_controller_1.updateStudent);
+router.delete("/:id", student_controller_1.deleteStudent);
+exports.default = router;

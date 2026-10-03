@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const casheir_controller_1 = require("../controller/casheir-controller");
+const router = (0, express_1.Router)();
+router.post("/", casheir_controller_1.createCashier);
+router.get("/", casheir_controller_1.getCashiers);
+router.post("/payment", casheir_controller_1.createPayment);
+router.patch("/payment/:id", casheir_controller_1.updatePayment);
+router.delete("/payment/:id", casheir_controller_1.deletePayment);
+router.get("/payments", casheir_controller_1.getPayments);
+router.get("/student/:studentId/payments", casheir_controller_1.getStudentPayments);
+router.get("/:id", casheir_controller_1.getCashier);
+router.patch("/:id", casheir_controller_1.updateCashier);
+router.delete("/:id", casheir_controller_1.deleteCashier);
+exports.default = router;

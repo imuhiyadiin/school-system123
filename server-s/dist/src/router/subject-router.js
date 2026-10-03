@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const subject_conttroller_1 = require("../controller/subject-conttroller");
+const auth_1 = require("../middelwere/auth");
+const router = (0, express_1.Router)();
+router.post("/", auth_1.verifyToken, auth_1.requireAdmin, subject_conttroller_1.createSubject);
+router.get("/", auth_1.verifyToken, subject_conttroller_1.getSubjects);
+router.get("/:id", auth_1.verifyToken, subject_conttroller_1.getSubject);
+router.patch("/:id", auth_1.verifyToken, auth_1.requireAdmin, subject_conttroller_1.updateSubject);
+router.delete("/:id", auth_1.verifyToken, auth_1.requireAdmin, subject_conttroller_1.deleteSubject);
+exports.default = router;

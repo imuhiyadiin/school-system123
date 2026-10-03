@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const dashboud_controller_1 = require("../controller/dashboud-controller");
+const auth_1 = require("../middelwere/auth");
+const router = (0, express_1.Router)();
+router.get("/", auth_1.verifyToken, auth_1.requireDashboardAccess, dashboud_controller_1.getDashboard);
+router.get("/users", auth_1.verifyToken, auth_1.requireAdmin, dashboud_controller_1.getUsers);
+router.patch("/users/:id/role", auth_1.verifyToken, auth_1.requireAdmin, dashboud_controller_1.changeRole);
+router.delete("/users/:id", auth_1.verifyToken, auth_1.requireAdmin, dashboud_controller_1.deleteUser);
+exports.default = router;
