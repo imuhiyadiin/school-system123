@@ -1,13 +1,8 @@
 import axios from "axios"
 
-const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api"
-const normalizedApiUrl = configuredApiUrl.replace(/\/+$/, "")
-const apiBaseUrl = normalizedApiUrl.endsWith("/api")
-  ? normalizedApiUrl
-  : `${normalizedApiUrl}/api`
-
 export const apiClient = axios.create({
-  baseURL: apiBaseUrl,
+  // Use the frontend origin; next.config.ts proxies /api requests to the backend.
+  baseURL: "/api",
   headers: { "Content-Type": "application/json" },
 })
 
