@@ -1,5 +1,6 @@
 import hashpass from "bcryptjs";
 import { Request, Response } from "express";
+import type { Prisma } from "../../generated/prisma/client";
 import prisma from "../lip/prisma";
 import { generateToken } from "../secure/generate-token";
 
@@ -289,7 +290,15 @@ export const getAllTeachers = async (
       },
     });
 
-    const data = teachers.map((teacher) => ({
+    const data = teachers.map((teacher: Prisma.TeacherGetPayload<{
+      include: {
+        user: true;
+        subjects: { include: { subject: true } };
+        classrooms: true;
+        payrolls: true;
+        attendances: true;
+      };
+    }>) => ({
       id: teacher.id,
       userId: teacher.userId,
       fullName: teacher.fullName,

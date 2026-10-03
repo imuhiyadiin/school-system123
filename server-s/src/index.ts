@@ -26,7 +26,6 @@ const app = express();
 dotenv.config();
  
 app.use(express.json());
-const PORT = Number(process.env.PORT ?? 8000);
 
 app.use(cors());
 app.use("/api", (req, res, next) => {
@@ -63,4 +62,9 @@ app.get("/api", (_req, res) => {
   res.json({ message: "Server is running" });
 });
 
-app.listen(PORT, () => console.log(`server is running ${PORT}`));
+export default app;
+
+if (require.main === module) {
+  const PORT = Number(process.env.PORT ?? 8000);
+  app.listen(PORT, () => console.log(`server is running ${PORT}`));
+}
