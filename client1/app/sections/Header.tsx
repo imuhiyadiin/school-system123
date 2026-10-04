@@ -73,11 +73,11 @@ const Header = () => {
             <Sparkles className="h-5 w-5" />
           </span>
           <span className="min-w-0">
-            <span className="block whitespace-nowrap text-[18px] leading-none tracking-wide text-slate-900 dark:text-white sm:text-xl" style={{ fontFamily: "var(--font-ranchers), sans-serif" }}>
+            <span className="block whitespace-nowrap text-base leading-none tracking-wide text-slate-900 dark:text-white sm:text-lg" style={{ fontFamily: "var(--font-ranchers), sans-serif" }}>
               my-system HIyo
             </span>
-            <span className="hidden text-xs font-medium text-emerald-600 sm:block">
-             school-exam
+            <span className="mt-1 block text-[10px] font-medium leading-none text-emerald-600 sm:text-xs">
+              school-system
             </span>
           </span>
         </Link>
