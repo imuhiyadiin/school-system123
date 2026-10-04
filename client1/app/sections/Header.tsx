@@ -66,17 +66,17 @@ const Header = () => {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="group flex items-center gap-3"
+          className="group flex min-w-0 items-center gap-2 sm:gap-3"
           aria-label="Creative Readers home"
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 text-white shadow-lg shadow-blue-500/25 transition duration-300 group-hover:scale-105">
             <Sparkles className="h-5 w-5" />
           </span>
-          <span className="hidden sm:block">
-            <span className="block text-sm font-bold tracking-tight text-slate-900 dark:text-white">
-              abu-huraira
+          <span className="min-w-0">
+            <span className="block whitespace-nowrap text-[13px] font-bold tracking-tight text-slate-900 dark:text-white sm:text-sm">
+              my-system HIyo
             </span>
-            <span className="block text-xs font-medium text-emerald-600">
+            <span className="hidden text-xs font-medium text-emerald-600 sm:block">
              school-exam
             </span>
           </span>
