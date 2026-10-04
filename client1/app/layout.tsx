@@ -1,4 +1,4 @@
-import { Geist_Mono, Inter } from "next/font/google"
+import { Geist_Mono, Inter, Ranchers } from "next/font/google"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -42,6 +42,12 @@ const fontMono = Geist_Mono({
   variable: "--font-mono",
 })
 
+const ranchers = Ranchers({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-ranchers",
+})
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -51,7 +57,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("antialiased", fontMono.variable, "font-sans", inter.variable)}
+      className={cn("antialiased", fontMono.variable, "font-sans", inter.variable, ranchers.variable)}
     >
       <body>
         <ThemeProvider>
