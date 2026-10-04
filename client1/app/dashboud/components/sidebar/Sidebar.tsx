@@ -8,6 +8,7 @@ import {
   Moon,
   Settings,
   Sun,
+  X,
   type LucideIcon,
 } from "lucide-react"
 import { useState } from "react"
@@ -25,6 +26,8 @@ type SidebarProps = {
   pathname: string
   theme: string | undefined
   collapsed: boolean
+  mobileOpen: boolean
+  onClose: () => void
   onNavigate: (href: string) => void
   onThemeToggle: () => void
   onSettings: () => void
@@ -47,26 +50,38 @@ export function Sidebar({
   onThemeToggle,
   onSettings,
   onLogout,
+  mobileOpen,
+  onClose,
 }: SidebarProps) {
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({})
   const mainNavigation = navigation.filter((item) => !item.account)
   const accountNavigation = navigation.filter((item) => item.account)
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-30 flex flex-col overflow-y-auto border-r border-slate-200 bg-white py-5 ${
-        collapsed ? "w-16 px-2" : "w-16 px-2 sm:w-72 sm:px-3"
-      }`}
+      id="dashboard-navigation"
+      aria-label="Dashboard navigation"
+      className={`fixed inset-y-3 left-3 z-40 flex w-[min(18rem,calc(100vw-1.5rem))] flex-col overflow-y-auto rounded-2xl border border-slate-200 bg-white px-3 py-4 shadow-xl transition-transform duration-200 sm:inset-y-0 sm:left-0 sm:translate-x-0 sm:rounded-none sm:border-y-0 sm:border-l-0 sm:border-r sm:shadow-none ${
+        mobileOpen ? "translate-x-0" : "-translate-x-[calc(100%+0.75rem)]"
+      } ${collapsed ? "sm:w-16 sm:px-2" : "sm:w-72 sm:px-3"}`}
     >
       <div className="flex items-center gap-3 px-1 sm:px-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-violet-300 ring-1 ring-zinc-700">
           <BookOpen className="h-5 w-5" />
         </div>
-        <div className={collapsed ? "hidden" : "hidden sm:block"}>
+        <div className={`min-w-0 flex-1 ${collapsed ? "block sm:hidden" : "block"}`}>
           <p className="text-sm leading-tight font-bold text-slate-900">
             Creative Readers
           </p>
           <p className="text-xs text-slate-500">School Management</p>
         </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close dashboard menu"
+          className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 sm:hidden"
+        >
+          <X aria-hidden="true" className="h-4 w-4" />
+        </button>
       </div>
 
       <nav className="mt-8 flex-1 space-y-1">
@@ -88,8 +103,8 @@ export function Sidebar({
                 <p
                   className={
                     collapsed
-                      ? "hidden"
-                      : "hidden px-3 pb-2 text-sm font-medium tracking-wide text-slate-500 sm:block"
+                      ? "block px-3 pb-2 text-sm font-medium tracking-wide text-slate-500 sm:hidden"
+                      : "block px-3 pb-2 text-sm font-medium tracking-wide text-slate-500"
                   }
                 >
                   {title}
@@ -107,30 +122,30 @@ export function Sidebar({
                   }
                   onNavigate(item.href)
                 }}
-                className={`flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-left text-base font-medium transition sm:justify-start ${
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-base font-medium transition ${collapsed ? "justify-start sm:justify-center" : "justify-start"} ${
                   active
                     ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700"
                     : "text-slate-700 hover:bg-zinc-800 hover:text-white"
                 }`}
               >
                 <Icon className="h-5 w-5 shrink-0" />
-                <span className={collapsed ? "hidden" : "hidden sm:inline"}>
+                <span className={collapsed ? "inline sm:hidden" : "inline"}>
                   {item.label}
                 </span>
-                {item.children && !collapsed && (
-                  <ChevronDown className={`ml-auto hidden h-4 w-4 transition-transform sm:block ${expanded ? "rotate-180" : ""}`} />
+                {item.children && (
+                  <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${collapsed ? "sm:hidden" : ""} ${expanded ? "rotate-180" : ""}`} />
                 )}
               </button>
-              {item.children && !collapsed && expanded && (
+              {item.children && expanded && (
                 <div
-                  className={`relative mt-1 ml-6 hidden space-y-1 border-l border-slate-200 pl-3 sm:block ${active ? "" : "opacity-80"}`}
+                  className={`relative mt-1 ml-6 space-y-1 border-l border-slate-200 pl-3 ${collapsed ? "sm:hidden" : ""} ${active ? "" : "opacity-80"}`}
                 >
                   {item.children.map((child) => (
                     <button
                       key={child.href}
                       type="button"
                       onClick={() => onNavigate(child.href)}
-                    className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${pathname === child.href.split("?")[0] ? "bg-zinc-800 text-white" : "text-slate-600 hover:bg-zinc-800 hover:text-white"}`}
+                      className={`block w-full rounded-md px-3 py-2 text-left text-sm transition ${pathname === child.href.split("?")[0] ? "bg-zinc-800 text-white" : "text-slate-600 hover:bg-zinc-800 hover:text-white"}`}
                     >
                       {child.label}
                     </button>
@@ -146,8 +161,8 @@ export function Sidebar({
         <p
           className={
             collapsed
-              ? "hidden"
-              : "hidden px-3 pb-2 text-xs font-semibold tracking-[0.16em] text-slate-500 sm:block"
+              ? "block px-3 pb-2 text-xs font-semibold tracking-[0.16em] text-slate-500 sm:hidden"
+              : "block px-3 pb-2 text-xs font-semibold tracking-[0.16em] text-slate-500"
           }
         >
           ACCOUNT
@@ -177,28 +192,28 @@ export function Sidebar({
                   }
                   onNavigate(item.href)
                 }}
-                className={`flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-left text-base font-medium transition sm:justify-start ${
+                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-base font-medium transition ${collapsed ? "justify-start sm:justify-center" : "justify-start"} ${
                   active
                     ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700"
                     : "text-slate-700 hover:bg-zinc-800 hover:text-white"
                 }`}
               >
                 <Icon className="h-5 w-5 shrink-0" />
-                <span className={collapsed ? "hidden" : "hidden sm:inline"}>
+                <span className={collapsed ? "inline sm:hidden" : "inline"}>
                   {item.label}
                 </span>
-                {item.children && !collapsed && (
-                  <ChevronDown className={`ml-auto hidden h-4 w-4 transition-transform sm:block ${expanded ? "rotate-180" : ""}`} />
+                {item.children && (
+                  <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${collapsed ? "sm:hidden" : ""} ${expanded ? "rotate-180" : ""}`} />
                 )}
               </button>
-              {item.children && !collapsed && expanded && (
-                <div className="relative mt-1 ml-6 hidden space-y-1 border-l border-slate-200 pl-3 sm:block">
+              {item.children && expanded && (
+                <div className={`relative mt-1 ml-6 space-y-1 border-l border-slate-200 pl-3 ${collapsed ? "sm:hidden" : ""}`}>
                   {item.children.map((child) => (
                     <button
                       key={child.href}
                       type="button"
                       onClick={() => onNavigate(child.href)}
-                      className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition ${pathname === child.href.split("?")[0] ? "bg-zinc-800 text-white" : "text-slate-600 hover:bg-zinc-800 hover:text-white"}`}
+                      className={`block w-full rounded-md px-3 py-2 text-left text-sm transition ${pathname === child.href.split("?")[0] ? "bg-zinc-800 text-white" : "text-slate-600 hover:bg-zinc-800 hover:text-white"}`}
                     >
                       {child.label}
                     </button>
@@ -211,34 +226,34 @@ export function Sidebar({
         <button
           type="button"
           onClick={onThemeToggle}
-          className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 transition hover:bg-zinc-800 hover:text-white sm:justify-start"
+          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 transition hover:bg-zinc-800 hover:text-white ${collapsed ? "justify-start sm:justify-center" : "justify-start"}`}
         >
           {theme === "dark" ? (
             <Sun className="h-5 w-5" />
           ) : (
             <Moon className="h-5 w-5" />
           )}
-          <span className={collapsed ? "hidden" : "hidden sm:inline"}>
+          <span className={collapsed ? "inline sm:hidden" : "inline"}>
             {theme === "dark" ? "Light mode" : "Dark mode"}
           </span>
         </button>
         <button
           type="button"
           onClick={onSettings}
-          className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 transition hover:bg-zinc-800 hover:text-white sm:justify-start"
+          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 transition hover:bg-zinc-800 hover:text-white ${collapsed ? "justify-start sm:justify-center" : "justify-start"}`}
         >
           <Settings className="h-5 w-5" />
-          <span className={collapsed ? "hidden" : "hidden sm:inline"}>
+          <span className={collapsed ? "inline sm:hidden" : "inline"}>
             Settings
           </span>
         </button>
         <button
           type="button"
           onClick={onLogout}
-          className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-rose-400 transition hover:bg-rose-950/40 sm:justify-start"
+          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-rose-400 transition hover:bg-rose-950/40 ${collapsed ? "justify-start sm:justify-center" : "justify-start"}`}
         >
           <LogOut className="h-5 w-5" />
-          <span className={collapsed ? "hidden" : "hidden sm:inline"}>
+          <span className={collapsed ? "inline sm:hidden" : "inline"}>
             Logout
           </span>
         </button>

@@ -30,6 +30,7 @@ import {
   ContactRound,
   CircleDollarSign,
   Bus,
+  X,
 } from "lucide-react"
 import type { AppDispatch, RootState } from "@/lib/store"
 import { clearAuth } from "@/services/auth/authSlice"
@@ -118,6 +119,7 @@ export default function DashboardPage() {
   const [expandedSidebarItems, setExpandedSidebarItems] = useState<
     Record<string, boolean>
   >({})
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const baseNavigation = isAdmin
     ? adminNavigation
     : isTeacher
@@ -148,9 +150,14 @@ export default function DashboardPage() {
   }, [dispatch, isInitialized, isLoading, loadedForUserId, user])
 
   const logout = () => {
+    setIsMobileSidebarOpen(false)
     dispatch(clearStudentDashboard())
     dispatch(clearAuth())
     router.replace("/singIn")
+  }
+  const navigate = (href: string) => {
+    setIsMobileSidebarOpen(false)
+    router.push(href)
   }
 
   const today = new Date().toISOString().slice(0, 10)
@@ -301,15 +308,27 @@ export default function DashboardPage() {
 
   return (
     <main className="dashboard-theme min-h-svh bg-slate-50 text-slate-900">
-      <aside className="fixed inset-y-0 left-0 z-30 flex w-16 flex-col overflow-y-auto border-r border-slate-200 bg-white px-2 py-5 sm:w-72 sm:px-3">
+      <aside
+        id="dashboard-navigation"
+        aria-label="Dashboard navigation"
+        className={`fixed inset-y-3 left-3 z-40 flex w-[min(18rem,calc(100vw-1.5rem))] flex-col overflow-y-auto rounded-2xl border border-slate-200 bg-white px-3 py-4 shadow-xl transition-transform duration-200 sm:inset-y-0 sm:left-0 sm:w-72 sm:translate-x-0 sm:rounded-none sm:border-y-0 sm:border-l-0 sm:border-r sm:px-3 sm:py-5 sm:shadow-none ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-[calc(100%+0.75rem)]"}`}
+      >
         <div className="flex items-center gap-3 px-1 sm:px-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-violet-300 shadow-lg shadow-black/30 ring-1 ring-zinc-700">
             <BookOpen className="h-5 w-5" />
           </div>
-          <div className="hidden sm:block">
+          <div className="min-w-0 flex-1">
             <p className="text-sm leading-tight font-bold">Creative Readers</p>
             <p className="text-xs text-slate-500">School Management</p>
           </div>
+          <button
+            type="button"
+            onClick={() => setIsMobileSidebarOpen(false)}
+            aria-label="Close dashboard menu"
+            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 sm:hidden"
+          >
+            <X aria-hidden="true" className="h-4 w-4" />
+          </button>
         </div>
 
         <nav className="mt-8 flex-1 space-y-1">
@@ -324,7 +343,7 @@ export default function DashboardPage() {
             return (
               <div key={item.label} className={title ? "pt-4 first:pt-0" : ""}>
                 {title && (
-                  <p className="hidden px-3 pb-2 text-sm font-medium text-slate-500 sm:block">
+                  <p className="px-3 pb-2 text-sm font-medium text-slate-500">
                     {title}
                   </p>
                 )}
@@ -337,25 +356,25 @@ export default function DashboardPage() {
                       }))
                       return
                     }
-                    router.push(item.href)
+                    navigate(item.href)
                   }}
-                  className={`flex w-full justify-center gap-3 rounded-lg px-3 py-2.5 text-left text-base font-medium transition sm:justify-start ${item.label === "Dashboard" ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700" : "text-slate-700 hover:bg-zinc-800 hover:text-white"}`}
+                  className={`flex w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition sm:text-base ${item.label === "Dashboard" ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700" : "text-slate-700 hover:bg-zinc-800 hover:text-white"}`}
                 >
                   <Icon className="h-5 w-5 shrink-0" />
-                  <span className="hidden sm:inline">{item.label}</span>
+                  <span>{item.label}</span>
                   {children.length > 0 && (
                     <ChevronDown
-                      className={`ml-auto hidden h-4 w-4 transition-transform sm:block ${expandedSidebarItems[item.label] ? "rotate-180" : ""}`}
+                      className={`ml-auto h-4 w-4 transition-transform ${expandedSidebarItems[item.label] ? "rotate-180" : ""}`}
                     />
                   )}
                 </button>
                 {children.length > 0 && expandedSidebarItems[item.label] && (
-                    <div className="relative mt-1 ml-7 hidden space-y-1 border-l border-slate-200 pl-3 sm:block">
+                    <div className="relative mt-1 ml-7 space-y-1 border-l border-slate-200 pl-3">
                     {children.map((child) => (
                         <button
                           key={child.href}
-                          onClick={() => router.push(child.href)}
-                          className="block w-full rounded-md px-3 py-1.5 text-left text-sm text-slate-600 transition hover:bg-zinc-800 hover:text-white"
+                          onClick={() => navigate(child.href)}
+                          className="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 transition hover:bg-zinc-800 hover:text-white"
                         >
                           {child.label}
                         </button>
@@ -366,7 +385,7 @@ export default function DashboardPage() {
             )
           })}
           <div className="pt-5">
-            <p className="hidden px-3 pb-2 text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase sm:block">
+            <p className="px-3 pb-2 text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">
               Account
             </p>
             {accountNavigation.map((item) => {
@@ -386,25 +405,25 @@ export default function DashboardPage() {
                         }))
                         return
                       }
-                      router.push(item.href)
+                      navigate(item.href)
                     }}
-                    className="flex w-full justify-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-zinc-800 hover:text-white sm:justify-start"
+                    className="flex w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-zinc-800 hover:text-white"
                   >
                     <Icon className="h-4.5 w-4.5 shrink-0" />
-                    <span className="hidden sm:inline">{item.label}</span>
+                    <span>{item.label}</span>
                     {children.length > 0 && (
                       <ChevronDown
-                        className={`ml-auto hidden h-4 w-4 transition-transform sm:block ${expandedSidebarItems[item.label] ? "rotate-180" : ""}`}
+                        className={`ml-auto h-4 w-4 transition-transform ${expandedSidebarItems[item.label] ? "rotate-180" : ""}`}
                       />
                     )}
                   </button>
                   {children.length > 0 && expandedSidebarItems[item.label] && (
-                    <div className="relative mt-1 ml-7 hidden space-y-1 border-l border-slate-200 pl-3 sm:block">
+                    <div className="relative mt-1 ml-7 space-y-1 border-l border-slate-200 pl-3">
                       {children.map((child) => (
                         <button
                           key={child.href}
-                          onClick={() => router.push(child.href)}
-                          className="block w-full rounded-md px-3 py-1.5 text-left text-sm text-slate-600 transition hover:bg-zinc-800 hover:text-white"
+                          onClick={() => navigate(child.href)}
+                          className="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 transition hover:bg-zinc-800 hover:text-white"
                         >
                           {child.label}
                         </button>
@@ -415,31 +434,46 @@ export default function DashboardPage() {
               )
             })}
             <button
-              onClick={() => router.push("/dashboud/settings")}
-              className="flex w-full justify-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-zinc-800 hover:text-white sm:justify-start"
+              onClick={() => navigate("/dashboud/settings")}
+              className="flex w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-zinc-800 hover:text-white"
             >
               <Settings className="h-4.5 w-4.5 shrink-0" />
-              <span className="hidden sm:inline">Settings</span>
+              <span>Settings</span>
             </button>
             <button
               onClick={logout}
-              className="flex w-full justify-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-400 transition hover:bg-rose-950/40 sm:justify-start"
+              className="flex w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-400 transition hover:bg-rose-950/40"
             >
               <LogOut className="h-4.5 w-4.5 shrink-0" />
-              <span className="hidden sm:inline">Logout</span>
+              <span>Logout</span>
             </button>
           </div>
         </nav>
       </aside>
 
-      <div className="pl-16 sm:pl-72">
-        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
+      {isMobileSidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close dashboard menu"
+          onClick={() => setIsMobileSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-slate-950/35 backdrop-blur-[1px] sm:hidden"
+        />
+      )}
+      <div className="min-w-0 sm:pl-72">
+        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-3 py-2.5 backdrop-blur sm:px-6 sm:py-3 lg:px-8">
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 xl:hidden">
-              <button className="rounded-xl p-2 text-slate-600 transition hover:bg-slate-100">
-                <Menu className="h-5 w-5" />
+            <div className="flex min-w-0 items-center gap-2 xl:hidden sm:gap-3">
+              <button
+                type="button"
+                onClick={() => setIsMobileSidebarOpen((open) => !open)}
+                aria-label={isMobileSidebarOpen ? "Close dashboard menu" : "Open dashboard menu"}
+                aria-controls="dashboard-navigation"
+                aria-expanded={isMobileSidebarOpen}
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-600 transition hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 sm:hidden"
+              >
+                {isMobileSidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
               </button>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-violet-300 ring-1 ring-zinc-700">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-violet-300 ring-1 ring-zinc-700 sm:h-9 sm:w-9 sm:rounded-xl">
                 <BookOpen className="h-5 w-5" />
               </div>
             </div>

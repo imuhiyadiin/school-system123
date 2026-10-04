@@ -12,6 +12,7 @@ import {
   Users,
   UsersRound,
   PanelLeft,
+  X,
   Search,
   ContactRound,
   Bus,
@@ -71,6 +72,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const dispatch = useDispatch<AppDispatch>()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const { user } = useSelector((state: RootState) => state.auth)
   const { resolvedTheme, setTheme } = useTheme()
   if (pathname === "/dashboud") return <>{children}</>
@@ -90,6 +92,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             item.href === "/dashboud" || user.permissions?.includes(item.href)
         )
   const logout = () => {
+    setIsMobileSidebarOpen(false)
     dispatch(clearStudentDashboard())
     dispatch(clearAuth())
     router.replace("/singIn")
@@ -101,22 +104,47 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         pathname={pathname}
         theme={resolvedTheme}
         collapsed={isSidebarCollapsed}
-        onNavigate={(href) => router.push(href)}
+        mobileOpen={isMobileSidebarOpen}
+        onClose={() => setIsMobileSidebarOpen(false)}
+        onNavigate={(href) => {
+          setIsMobileSidebarOpen(false)
+          router.push(href)
+        }}
         onThemeToggle={() =>
           setTheme(resolvedTheme === "dark" ? "light" : "dark")
         }
-        onSettings={() => router.push("/dashboud/settings")}
+        onSettings={() => {
+          setIsMobileSidebarOpen(false)
+          router.push("/dashboud/settings")
+        }}
         onLogout={logout}
       />
-      <div className={isSidebarCollapsed ? "pl-16" : "pl-16 sm:pl-72"}>
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-4 border-b border-slate-200 bg-white/95 px-4 backdrop-blur sm:px-8">
+      {isMobileSidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close dashboard menu"
+          onClick={() => setIsMobileSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-slate-950/35 backdrop-blur-[1px] sm:hidden"
+        />
+      )}
+      <div className={isSidebarCollapsed ? "sm:pl-16" : "sm:pl-72"}>
+        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-slate-200 bg-white/95 px-3 backdrop-blur sm:h-16 sm:gap-4 sm:px-8">
           <Button
             variant="ghost"
-            size="icon"
-            onClick={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
-            aria-label="Toggle sidebar"
+            size="icon-sm"
+            onClick={() => {
+              if (window.matchMedia("(min-width: 640px)").matches) {
+                setIsSidebarCollapsed((collapsed) => !collapsed)
+              } else {
+                setIsMobileSidebarOpen((open) => !open)
+              }
+            }}
+            aria-label={isMobileSidebarOpen ? "Close dashboard menu" : "Open dashboard menu"}
+            aria-controls="dashboard-navigation"
+            aria-expanded={isMobileSidebarOpen || !isSidebarCollapsed}
+            className="sm:size-8"
           >
-            <PanelLeft className="h-5 w-5" />
+            {isMobileSidebarOpen ? <X className="h-4 w-4" /> : <PanelLeft className="h-4 w-4" />}
           </Button>
           <div className="hidden h-8 w-px bg-slate-200 sm:block" />
           <label className="relative hidden max-w-md flex-1 sm:block">
@@ -151,7 +179,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
-        {children}
+        <div className="min-w-0">{children}</div>
       </div>
       <MobileScrollTop />
     </main>
