@@ -407,20 +407,20 @@ export default function ResultsPage() {
     URL.revokeObjectURL(url)
   }
   return (
-    <main className="min-h-svh bg-slate-50 p-4 text-slate-900 sm:p-6 lg:p-8">
+    <main className="min-h-svh min-w-0 overflow-x-hidden bg-slate-50 p-3 text-slate-900 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-[1720px]">
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <div>
+        <div className="mb-6 flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <p className="text-sm font-semibold text-emerald-600">
               School Management
             </p>
-            <h1 className="mt-1 text-3xl font-bold">Results</h1>
+            <h1 className="mt-1 text-2xl font-bold sm:text-3xl">Results</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="grid w-full grid-cols-3 gap-2 sm:w-auto sm:flex sm:items-center">
             <button
               type="button"
               onClick={exportResults}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+              className="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 sm:gap-1.5 sm:px-3 sm:text-sm"
             >
               <Download className="h-4 w-4" /> Export
             </button>
@@ -430,7 +430,7 @@ export default function ResultsPage() {
                 setUploadOpen(true)
                 setError("")
               }}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+              className="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50 sm:gap-1.5 sm:px-3 sm:text-sm"
             >
               <Upload className="h-4 w-4" />
               Upload CSV
@@ -445,7 +445,7 @@ export default function ResultsPage() {
                 setOpen(true)
                 setError("")
               }}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+              className="inline-flex min-w-0 items-center justify-center gap-1 rounded-lg bg-blue-600 px-2 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 sm:gap-1.5 sm:px-3 sm:text-sm"
             >
               <Plus className="h-4 w-4" />
               Add Result
