@@ -774,22 +774,22 @@ export function CrudPage({
     ? "mt-3 h-16 w-full rounded-xl border border-slate-200 bg-white px-5 text-base text-slate-800 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
     : "mt-1 w-full rounded-xl border border-slate-200 p-3 text-sm"
   return (
-    <main className="min-h-svh bg-slate-50 p-4 text-slate-900 sm:p-6 lg:p-8">
+    <main className="min-h-svh min-w-0 overflow-x-hidden bg-slate-50 p-3 text-slate-900 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-[1720px]">
-        <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
-          <div>
+        <header className="mb-6 flex flex-col items-stretch justify-between gap-4 sm:mb-8 sm:flex-row sm:items-end">
+          <div className="min-w-0">
             <p className="text-sm font-medium text-slate-500">
               School Management
             </p>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950">
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
               {title}
             </h1>
-            <p className="mt-1 text-base text-slate-500">
+            <p className="mt-1 text-sm text-slate-500 sm:text-base">
               Manage your school {title.toLowerCase()} in one place.
             </p>
           </div>
-          <div className="flex items-center gap-3">
-          <Button type="button" variant="outline" onClick={exportRecords} className="h-12 rounded-xl px-5 text-base">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-3">
+          <Button type="button" variant="outline" onClick={exportRecords} className="h-11 min-w-0 rounded-xl px-3 text-sm sm:h-12 sm:px-5 sm:text-base">
             <Download className="h-4 w-4" /> Export
           </Button>
           <Button
@@ -800,7 +800,7 @@ export function CrudPage({
               setEditingId(null)
               setIsFormModalOpen(true)
             }}
-            className={`h-12 rounded-xl px-5 text-base ${
+            className={`h-11 min-w-0 rounded-xl px-3 text-sm sm:h-12 sm:px-5 sm:text-base ${
               title === "Students"
                 ? "bg-blue-600 hover:bg-blue-700"
                 : "bg-emerald-600 hover:bg-emerald-700"

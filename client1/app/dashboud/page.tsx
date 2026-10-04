@@ -544,7 +544,7 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <section className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8">
+        <section className="mx-auto w-full max-w-[1600px] p-3 sm:p-6 lg:p-8">
           <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
               <p className="text-sm font-semibold text-emerald-600">
@@ -554,7 +554,7 @@ export default function DashboardPage() {
                     ? "Teacher Overview"
                     : "Student Overview"}
               </p>
-              <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+              <h1 className="mt-1 break-words text-2xl font-bold tracking-tight sm:text-3xl">
                 Good morning,{" "}
                 {profile?.fullName ??
                   user?.fullName ??
@@ -572,7 +572,7 @@ export default function DashboardPage() {
                     : `Student ID: ${profile?.id ?? "Loading..."}${profile?.classrooms[0] ? ` · ${profile.classrooms[0].classroom.name} ${profile.classrooms[0].classroom.section}` : ""}`}
               </p>
             </div>
-            <div className="flex items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700">
+            <div className="flex w-fit max-w-full items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700 sm:text-sm">
               <CalendarDays className="h-4 w-4" />
               {new Date().toLocaleDateString("en-US", {
                 weekday: "long",
@@ -595,14 +595,14 @@ export default function DashboardPage() {
               return (
                 <article
                   key={item.label}
-                  className="dashboard-stat-card rounded-2xl border border-slate-100 bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-950/5"
+                  className="dashboard-stat-card min-w-0 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-950/5 sm:p-5"
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="dashboard-stat-label text-sm font-medium text-slate-500">
                         {item.label}
                       </p>
-                      <p className="mt-2 text-3xl font-bold tracking-tight">
+                      <p className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
                         {isLoading ? (
                           <span className="inline-block h-8 w-14 animate-pulse rounded bg-slate-100" />
                         ) : (
@@ -625,7 +625,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-6">
-            <article className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+            <article className="min-w-0 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="font-bold">My performance</h2>
@@ -911,7 +911,7 @@ function DataPanel({
   children: React.ReactNode
 }) {
   return (
-    <article className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6">
+    <article className="min-w-0 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:p-6">
       <div className="mb-5 flex items-start justify-between">
         <div>
           <h2 className="font-bold">{title}</h2>
