@@ -66,7 +66,7 @@ const Header = () => {
     {isHomePage && (
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 top-0 z-40 h-20 bg-[url('/images/home-night-lake.jpg')] bg-cover bg-center bg-fixed sm:h-40"
+        className="pointer-events-none fixed inset-x-0 top-0 z-40 h-20 bg-[url('/images/home-night-lake.jpg')] bg-cover bg-center bg-fixed sm:h-36"
       />
     )}
     <header className={isHomePage
@@ -156,7 +156,7 @@ const Header = () => {
         </div>
       )}
     </header>
-    <div aria-hidden="true" className={isHomePage ? "h-[76px] sm:h-40" : "h-16"} />
+    <div aria-hidden="true" className={isHomePage ? "h-[76px] sm:h-36" : "h-16"} />
     </>
   )
 }
