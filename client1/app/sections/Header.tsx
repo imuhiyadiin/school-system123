@@ -83,7 +83,7 @@ const Header = () => {
           </span>
           <span className="min-w-0">
             <span className={`block whitespace-nowrap font-semibold leading-none tracking-tight ${isHomePage ? "text-slate-900" : "text-slate-900 dark:text-white"} ${isHomePage ? "text-base sm:text-2xl" : "text-base sm:text-lg"}`}>
-              my-system HIyo
+              my-system 
             </span>
             <span className="mt-1 block text-[10px] font-medium leading-none text-emerald-600 sm:text-xs">
               school-system
