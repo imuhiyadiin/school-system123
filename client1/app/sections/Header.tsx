@@ -70,7 +70,7 @@ const Header = () => {
       />
     )}
     <header className={isHomePage
-      ? "fixed inset-x-3 top-3 z-50 rounded-[24px] border border-teal-200/80 bg-[linear-gradient(rgba(232,246,245,0.84),rgba(232,246,245,0.84)),url('/images/home-night-lake.jpg')] bg-cover bg-center bg-fixed shadow-lg shadow-teal-950/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/90 dark:shadow-black/20 sm:inset-x-9 sm:top-8 sm:rounded-[30px]"
+      ? "fixed inset-x-3 top-3 z-50 rounded-[24px] border border-cyan-200/80 bg-[linear-gradient(115deg,rgba(224,247,250,0.88),rgba(236,253,250,0.84),rgba(224,242,254,0.88)),url('/images/home-night-lake.jpg')] bg-cover bg-center bg-fixed shadow-lg shadow-teal-950/10 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/90 dark:shadow-black/20 sm:inset-x-9 sm:top-8 sm:rounded-[30px]"
       : "fixed inset-x-0 top-0 z-50 rounded-b-2xl border border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/85 dark:shadow-black/20"}>
       <div className={`mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 ${isHomePage ? "h-16 max-w-[1600px] sm:h-28 sm:px-8 lg:px-12" : "h-16 max-w-7xl"}`}>
         <Link
