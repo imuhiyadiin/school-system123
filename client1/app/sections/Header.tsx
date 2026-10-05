@@ -82,7 +82,7 @@ const Header = () => {
             <Sparkles className={isHomePage ? "h-5 w-5 sm:h-7 sm:w-7" : "h-5 w-5"} />
           </span>
           <span className="min-w-0">
-            <span className={`block whitespace-nowrap font-semibold leading-none tracking-tight text-slate-900 dark:text-white ${isHomePage ? "text-base sm:text-2xl" : "text-base sm:text-lg"}`}>
+            <span className={`block whitespace-nowrap font-semibold leading-none tracking-tight ${isHomePage ? "text-slate-900" : "text-slate-900 dark:text-white"} ${isHomePage ? "text-base sm:text-2xl" : "text-base sm:text-lg"}`}>
               my-system HIyo
             </span>
             <span className="mt-1 block text-[10px] font-medium leading-none text-emerald-600 sm:text-xs">
@@ -95,8 +95,8 @@ const Header = () => {
           className="hidden items-center gap-1 lg:flex"
           aria-label="Primary navigation"
         >
-          <NavLink href="/#home" active={isHomePage}>Home</NavLink>
-          <NavLink href="/studenLogin">Student Login</NavLink>
+          <NavLink href="/#home" active={isHomePage} homeStyle={isHomePage}>Home</NavLink>
+          <NavLink href="/studenLogin" homeStyle={isHomePage}>Student Login</NavLink>
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
@@ -288,15 +288,17 @@ function NavLink({
   href,
   children,
   active = false,
+  homeStyle = false,
 }: {
   href: string
   children: React.ReactNode
   active?: boolean
+  homeStyle?: boolean
 }) {
   return (
     <Link
       href={href}
-      className={`rounded-2xl px-4 py-3 text-sm font-semibold transition dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white ${active ? "bg-teal-50 text-teal-700 dark:bg-slate-800 dark:text-teal-300" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}
+      className={`rounded-2xl px-4 py-3 text-sm font-semibold transition ${homeStyle ? active ? "bg-teal-50 text-teal-800 hover:bg-teal-100" : "text-slate-700 hover:bg-white/70 hover:text-teal-800" : `dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white ${active ? "bg-teal-50 text-teal-700 dark:bg-slate-800 dark:text-teal-300" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}`}
     >
       {children}
     </Link>
