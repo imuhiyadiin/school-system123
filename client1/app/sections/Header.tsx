@@ -54,6 +54,7 @@ const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const pathname = usePathname()
+  const isHomePage = pathname === "/"
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth)
 
   if (pathname.startsWith("/dashboud")) {
@@ -62,18 +63,20 @@ const Header = () => {
 
   return (
     <>
-    <header className="fixed inset-x-0 top-0 z-50 rounded-b-2xl border border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/85 dark:shadow-black/20">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <header className={isHomePage
+      ? "fixed inset-x-3 top-3 z-50 rounded-[24px] border border-teal-100/90 bg-white/85 shadow-lg shadow-teal-950/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/85 dark:shadow-black/20 sm:inset-x-5 sm:top-6 sm:rounded-[30px]"
+      : "fixed inset-x-0 top-0 z-50 rounded-b-2xl border border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/85 dark:shadow-black/20"}>
+      <div className={`mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 ${isHomePage ? "h-16 max-w-[1600px] sm:h-24 sm:px-8 lg:px-12" : "h-16 max-w-7xl"}`}>
         <Link
           href="/"
           className="group flex min-w-0 items-center gap-2 sm:gap-3"
           aria-label="Creative Readers home"
         >
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 text-white shadow-lg shadow-blue-500/25 transition duration-300 group-hover:scale-105">
-            <Sparkles className="h-5 w-5" />
+          <span className={`flex items-center justify-center rounded-xl bg-gradient-to-br from-cyan-700 to-teal-500 text-white shadow-lg shadow-teal-600/20 transition duration-300 group-hover:scale-105 ${isHomePage ? "h-10 w-10 sm:h-[70px] sm:w-[70px] sm:rounded-[20px]" : "h-10 w-10"}`}>
+            <Sparkles className={isHomePage ? "h-5 w-5 sm:h-7 sm:w-7" : "h-5 w-5"} />
           </span>
           <span className="min-w-0">
-            <span className="block whitespace-nowrap text-base leading-none tracking-wide text-slate-900 dark:text-white sm:text-lg" style={{ fontFamily: "var(--font-ranchers), sans-serif" }}>
+            <span className={`block whitespace-nowrap leading-none tracking-wide text-slate-900 dark:text-white ${isHomePage ? "text-base sm:text-2xl" : "text-base sm:text-lg"}`} style={{ fontFamily: "var(--font-ranchers), sans-serif" }}>
               my-system HIyo
             </span>
             <span className="mt-1 block text-[10px] font-medium leading-none text-emerald-600 sm:text-xs">
@@ -86,14 +89,14 @@ const Header = () => {
           className="hidden items-center gap-1 lg:flex"
           aria-label="Primary navigation"
         >
-          <NavLink href="/#home">Home</NavLink>
+          <NavLink href="/#home" active={isHomePage}>Home</NavLink>
           <NavLink href="/studenLogin">Student Login</NavLink>
         </nav>
 
         <div className="hidden items-center gap-2 lg:flex">
           <ThemeToggle />
           {isAuthenticated && user ? (
-            <ProfileDropdown user={user} isOpen={profileMenuOpen} setIsOpen={setProfileMenuOpen} />
+            <ProfileDropdown user={user} isOpen={profileMenuOpen} setIsOpen={setProfileMenuOpen} homeStyle={isHomePage} />
           ) : (
             <>
               <Link href="/singIn" className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-blue-50 hover:text-blue-700">Login</Link>
@@ -147,7 +150,7 @@ const Header = () => {
         </div>
       )}
     </header>
-    <div aria-hidden="true" className="h-16" />
+    <div aria-hidden="true" className={isHomePage ? "h-[76px] sm:h-[136px]" : "h-16"} />
     </>
   )
 }
@@ -210,7 +213,7 @@ function ThemeToggle({ mobile = false }: { mobile?: boolean }) {
   return <button type="button" onClick={() => setTheme(isDark ? "light" : "dark")} className={mobile ? "flex h-11 w-full items-center justify-between rounded-xl border border-slate-200 px-3 text-sm font-semibold text-slate-700 transition hover:bg-blue-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800" : "flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-700 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800"} aria-label="Toggle dark mode">{mobile && <span>{isDark ? "Light mode" : "Dark mode"}</span>}{isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
 }
 
-function ProfileDropdown({ user, isOpen, setIsOpen, mobile = false }: { user: AuthUser; isOpen: boolean; setIsOpen: (value: boolean) => void; mobile?: boolean }) {
+function ProfileDropdown({ user, isOpen, setIsOpen, mobile = false, homeStyle = false }: { user: AuthUser; isOpen: boolean; setIsOpen: (value: boolean) => void; mobile?: boolean; homeStyle?: boolean }) {
   const menuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const [logout, { isLoading }] = useLogoutMutation()
@@ -262,8 +265,8 @@ function ProfileDropdown({ user, isOpen, setIsOpen, mobile = false }: { user: Au
 
   return (
     <div ref={menuRef} data-profile-dropdown className={mobile ? "w-full" : "relative"}>
-      <button type="button" onClick={() => setIsOpen(!isOpen)} className={mobile ? "flex w-full items-center justify-between rounded-xl border border-slate-200 px-3 py-3 text-left transition hover:bg-blue-50" : "flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-blue-50"} aria-expanded={isOpen} aria-haspopup="menu">
-        <span className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-emerald-500 text-sm font-bold text-white shadow-sm">{initials}</span><span className="max-w-32 truncate text-sm font-semibold text-slate-700">{name}</span></span>
+      <button type="button" onClick={() => setIsOpen(!isOpen)} className={mobile ? "flex w-full items-center justify-between rounded-xl border border-slate-200 px-3 py-3 text-left transition hover:bg-blue-50" : `flex items-center gap-3 rounded-xl px-2 py-1.5 transition hover:bg-blue-50 ${homeStyle ? "gap-3" : ""}`} aria-expanded={isOpen} aria-haspopup="menu">
+        <span className="flex min-w-0 items-center gap-3"><span className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-cyan-700 to-teal-500 text-sm font-bold text-white shadow-sm ${homeStyle && !mobile ? "h-12 w-12 rounded-2xl" : "h-9 w-9"}`}>{initials}</span>{homeStyle && !mobile ? <span className="min-w-0 text-left"><span className="block text-xs font-medium text-slate-400">{user.role === "ADMIN" ? "Administrator" : user.role.toLowerCase()}</span><span className="block max-w-40 truncate text-sm font-semibold text-slate-700">{name}</span></span> : <span className="max-w-32 truncate text-sm font-semibold text-slate-700">{name}</span>}</span>
         <ChevronDown className={`h-4 w-4 text-slate-500 transition ${isOpen ? "rotate-180" : ""}`} />
       </button>
       {isOpen && <div role="menu" className={mobile ? "mt-2 origin-top animate-in space-y-1 rounded-xl border border-slate-200 bg-white p-2 shadow-lg duration-200 fade-in slide-in-from-top-2" : "absolute right-0 top-[calc(100%+0.6rem)] z-50 w-64 origin-top-right animate-in space-y-1 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/10 duration-200 fade-in zoom-in-95"}>
@@ -278,14 +281,16 @@ function ProfileDropdown({ user, isOpen, setIsOpen, mobile = false }: { user: Au
 function NavLink({
   href,
   children,
+  active = false,
 }: {
   href: string
   children: React.ReactNode
+  active?: boolean
 }) {
   return (
     <Link
       href={href}
-      className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-blue-50 hover:text-blue-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      className={`rounded-2xl px-4 py-3 text-sm font-semibold transition dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white ${active ? "bg-teal-50 text-teal-700 dark:bg-slate-800 dark:text-teal-300" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}
     >
       {children}
     </Link>
