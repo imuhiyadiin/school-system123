@@ -312,6 +312,16 @@ body {
   overflow: hidden;
 }
 
+/* Light mode gets a subtle colour tint on the stats cards only. */
+.dashboard-theme .dashboard-stat-card:nth-child(4n + 1),
+.dashboard-theme .dashboard-state-card:nth-child(4n + 1) { background: linear-gradient(145deg, #f0fbf5, #ffffff 78%) !important; }
+.dashboard-theme .dashboard-stat-card:nth-child(4n + 2),
+.dashboard-theme .dashboard-state-card:nth-child(4n + 2) { background: linear-gradient(145deg, #fff9eb, #ffffff 78%) !important; }
+.dashboard-theme .dashboard-stat-card:nth-child(4n + 3),
+.dashboard-theme .dashboard-state-card:nth-child(4n + 3) { background: linear-gradient(145deg, #fff2f5, #ffffff 78%) !important; }
+.dashboard-theme .dashboard-stat-card:nth-child(4n),
+.dashboard-theme .dashboard-state-card:nth-child(4n) { background: linear-gradient(145deg, #f8f1ff, #ffffff 78%) !important; }
+
 .dashboard-stat-card:nth-child(4n + 1),
 .dashboard-state-card:nth-child(4n + 1) {
   border-top-color: #9adfc8 !important;
@@ -389,6 +399,14 @@ body {
 .dark .dashboard-theme [class~="text-slate-900"],
 .dark .dashboard-theme [class~="text-slate-800"],
 .dark .dashboard-theme [class~="text-slate-700"] { color: #f4f4f5 !important; }
+.dark .dashboard-theme .dashboard-stat-card:nth-child(4n + 1),
+.dark .dashboard-theme .dashboard-state-card:nth-child(4n + 1) { background: linear-gradient(145deg, #14271f, #151517 72%) !important; border-top-color: #48a982 !important; }
+.dark .dashboard-theme .dashboard-stat-card:nth-child(4n + 2),
+.dark .dashboard-theme .dashboard-state-card:nth-child(4n + 2) { background: linear-gradient(145deg, #292315, #151517 72%) !important; border-top-color: #c89b43 !important; }
+.dark .dashboard-theme .dashboard-stat-card:nth-child(4n + 3),
+.dark .dashboard-theme .dashboard-state-card:nth-child(4n + 3) { background: linear-gradient(145deg, #2a1922, #151517 72%) !important; border-top-color: #c66b8c !important; }
+.dark .dashboard-theme .dashboard-stat-card:nth-child(4n),
+.dark .dashboard-theme .dashboard-state-card:nth-child(4n) { background: linear-gradient(145deg, #241b30, #151517 72%) !important; border-top-color: #9871cb !important; }
 .dark .dashboard-theme input,
 .dark .dashboard-theme textarea,
 .dark .dashboard-theme select { border-color: #3f3f46 !important; background-color: #111113 !important; color: #f4f4f5 !important; }
