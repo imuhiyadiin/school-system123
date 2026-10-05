@@ -314,13 +314,13 @@ body {
 
 /* Light mode gets a subtle colour tint on the stats cards only. */
 .dashboard-theme .dashboard-stat-card:nth-child(4n + 1),
-.dashboard-theme .dashboard-state-card:nth-child(4n + 1) { background: linear-gradient(145deg, #f0fbf5, #ffffff 78%) !important; }
+.dashboard-theme .dashboard-state-card:nth-child(4n + 1) { background: linear-gradient(145deg, #dcf5e7, #ffffff 82%) !important; }
 .dashboard-theme .dashboard-stat-card:nth-child(4n + 2),
-.dashboard-theme .dashboard-state-card:nth-child(4n + 2) { background: linear-gradient(145deg, #fff9eb, #ffffff 78%) !important; }
+.dashboard-theme .dashboard-state-card:nth-child(4n + 2) { background: linear-gradient(145deg, #fff0c9, #ffffff 82%) !important; }
 .dashboard-theme .dashboard-stat-card:nth-child(4n + 3),
-.dashboard-theme .dashboard-state-card:nth-child(4n + 3) { background: linear-gradient(145deg, #fff2f5, #ffffff 78%) !important; }
+.dashboard-theme .dashboard-state-card:nth-child(4n + 3) { background: linear-gradient(145deg, #f9dfe8, #ffffff 82%) !important; }
 .dashboard-theme .dashboard-stat-card:nth-child(4n),
-.dashboard-theme .dashboard-state-card:nth-child(4n) { background: linear-gradient(145deg, #f8f1ff, #ffffff 78%) !important; }
+.dashboard-theme .dashboard-state-card:nth-child(4n) { background: linear-gradient(145deg, #edddfa, #ffffff 82%) !important; }
 
 .dashboard-stat-card:nth-child(4n + 1),
 .dashboard-state-card:nth-child(4n + 1) {
