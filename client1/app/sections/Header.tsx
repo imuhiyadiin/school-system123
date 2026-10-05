@@ -64,7 +64,7 @@ const Header = () => {
   return (
     <>
     <header className={isHomePage
-      ? "fixed inset-x-3 top-3 z-50 rounded-[24px] border border-teal-100/90 bg-white/85 shadow-lg shadow-teal-950/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/85 dark:shadow-black/20 sm:inset-x-5 sm:top-6 sm:rounded-[30px]"
+      ? "fixed inset-x-0 top-0 z-50 rounded-b-[24px] border border-teal-100/90 bg-white/90 shadow-lg shadow-teal-950/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/90 dark:shadow-black/20 sm:rounded-b-[30px]"
       : "fixed inset-x-0 top-0 z-50 rounded-b-2xl border border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/85 dark:shadow-black/20"}>
       <div className={`mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 ${isHomePage ? "h-16 max-w-[1600px] sm:h-24 sm:px-8 lg:px-12" : "h-16 max-w-7xl"}`}>
         <Link
@@ -150,7 +150,7 @@ const Header = () => {
         </div>
       )}
     </header>
-    <div aria-hidden="true" className={isHomePage ? "h-[76px] sm:h-[136px]" : "h-16"} />
+    <div aria-hidden="true" className={isHomePage ? "h-[76px] sm:h-[104px]" : "h-16"} />
     </>
   )
 }
