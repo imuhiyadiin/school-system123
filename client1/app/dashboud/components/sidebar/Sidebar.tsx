@@ -60,25 +60,25 @@ export function Sidebar({
     <aside
       id="dashboard-navigation"
       aria-label="Dashboard navigation"
-      className={`fixed inset-y-3 left-3 z-40 flex w-[min(18rem,calc(100vw-1.5rem))] flex-col overflow-y-auto rounded-2xl border border-slate-200 bg-white px-3 py-4 shadow-xl transition-transform duration-200 sm:inset-y-0 sm:left-0 sm:translate-x-0 sm:rounded-none sm:border-y-0 sm:border-l-0 sm:border-r sm:shadow-none ${
+      className={`fixed inset-y-3 left-3 z-40 flex w-[min(18rem,calc(100vw-1.5rem))] flex-col overflow-y-auto rounded-2xl border border-[#684034] bg-[#48271f] px-3 py-4 text-amber-50 shadow-xl transition-transform duration-200 sm:inset-y-0 sm:left-0 sm:translate-x-0 sm:rounded-none sm:border-y-0 sm:border-l-0 sm:border-r sm:shadow-none ${
         mobileOpen ? "translate-x-0" : "-translate-x-[calc(100%+0.75rem)]"
       } ${collapsed ? "sm:w-16 sm:px-2" : "sm:w-72 sm:px-3"}`}
     >
       <div className="flex items-center gap-3 px-1 sm:px-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-violet-300 ring-1 ring-zinc-700">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#5b3429] text-amber-100 ring-1 ring-[#75493b]">
           <BookOpen className="h-5 w-5" />
         </div>
         <div className={`min-w-0 flex-1 ${collapsed ? "block sm:hidden" : "block"}`}>
-          <p className="text-sm leading-tight font-bold text-slate-900">
+          <p className="text-sm leading-tight font-bold text-amber-50">
             Creative Readers
           </p>
-          <p className="text-xs text-slate-500">School Management</p>
+          <p className="text-xs text-[#c2a294]">School Management</p>
         </div>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close dashboard menu"
-          className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 sm:hidden"
+          className="rounded-lg p-2 text-[#d6b8a9] hover:bg-[#5b3429] sm:hidden"
         >
           <X aria-hidden="true" className="h-4 w-4" />
         </button>
@@ -104,7 +104,7 @@ export function Sidebar({
                   className={
                     collapsed
                       ? "block px-3 pb-2 text-sm font-medium tracking-wide text-slate-500 sm:hidden"
-                      : "block px-3 pb-2 text-sm font-medium tracking-wide text-slate-500"
+                      : "block px-3 pb-2 text-sm font-medium tracking-wide text-[#bd9b8c]"
                   }
                 >
                   {title}
@@ -124,8 +124,8 @@ export function Sidebar({
                 }}
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-base font-medium transition ${collapsed ? "justify-start sm:justify-center" : "justify-start"} ${
                   active
-                    ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700"
-                    : "text-slate-700 hover:bg-zinc-800 hover:text-white"
+                    ? "bg-[#633b30] text-amber-50 shadow-sm ring-1 ring-[#75493b]"
+                    : "text-[#e2cec4] hover:bg-[#5b3429] hover:text-white"
                 }`}
               >
                 <Icon className="h-5 w-5 shrink-0" />
@@ -138,14 +138,14 @@ export function Sidebar({
               </button>
               {item.children && expanded && (
                 <div
-                  className={`relative mt-1 ml-6 space-y-1 border-l border-slate-200 pl-3 ${collapsed ? "sm:hidden" : ""} ${active ? "" : "opacity-80"}`}
+                  className={`relative mt-1 ml-6 space-y-1 border-l border-[#765044] pl-3 ${collapsed ? "sm:hidden" : ""} ${active ? "" : "opacity-80"}`}
                 >
                   {item.children.map((child) => (
                     <button
                       key={child.href}
                       type="button"
                       onClick={() => onNavigate(child.href)}
-                      className={`block w-full rounded-md px-3 py-2 text-left text-sm transition ${pathname === child.href.split("?")[0] ? "bg-zinc-800 text-white" : "text-slate-600 hover:bg-zinc-800 hover:text-white"}`}
+                      className={`block w-full rounded-md px-3 py-2 text-left text-sm transition ${pathname === child.href.split("?")[0] ? "bg-[#633b30] text-amber-50" : "text-[#d8c0b5] hover:bg-[#5b3429] hover:text-white"}`}
                     >
                       {child.label}
                     </button>
@@ -157,12 +157,12 @@ export function Sidebar({
         })}
       </nav>
 
-      <div className="border-t border-slate-100 pt-3">
+      <div className="border-t border-[#684034] pt-3">
         <p
           className={
             collapsed
               ? "block px-3 pb-2 text-xs font-semibold tracking-[0.16em] text-slate-500 sm:hidden"
-              : "block px-3 pb-2 text-xs font-semibold tracking-[0.16em] text-slate-500"
+              : "block px-3 pb-2 text-xs font-semibold tracking-[0.16em] text-[#bd9b8c]"
           }
         >
           ACCOUNT
@@ -194,8 +194,8 @@ export function Sidebar({
                 }}
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-base font-medium transition ${collapsed ? "justify-start sm:justify-center" : "justify-start"} ${
                   active
-                    ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700"
-                    : "text-slate-700 hover:bg-zinc-800 hover:text-white"
+                    ? "bg-[#633b30] text-amber-50 shadow-sm ring-1 ring-[#75493b]"
+                    : "text-[#e2cec4] hover:bg-[#5b3429] hover:text-white"
                 }`}
               >
                 <Icon className="h-5 w-5 shrink-0" />
@@ -207,13 +207,13 @@ export function Sidebar({
                 )}
               </button>
               {item.children && expanded && (
-                <div className={`relative mt-1 ml-6 space-y-1 border-l border-slate-200 pl-3 ${collapsed ? "sm:hidden" : ""}`}>
+                <div className={`relative mt-1 ml-6 space-y-1 border-l border-[#765044] pl-3 ${collapsed ? "sm:hidden" : ""}`}>
                   {item.children.map((child) => (
                     <button
                       key={child.href}
                       type="button"
                       onClick={() => onNavigate(child.href)}
-                      className={`block w-full rounded-md px-3 py-2 text-left text-sm transition ${pathname === child.href.split("?")[0] ? "bg-zinc-800 text-white" : "text-slate-600 hover:bg-zinc-800 hover:text-white"}`}
+                      className={`block w-full rounded-md px-3 py-2 text-left text-sm transition ${pathname === child.href.split("?")[0] ? "bg-[#633b30] text-amber-50" : "text-[#d8c0b5] hover:bg-[#5b3429] hover:text-white"}`}
                     >
                       {child.label}
                     </button>
@@ -226,7 +226,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={onThemeToggle}
-          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 transition hover:bg-zinc-800 hover:text-white ${collapsed ? "justify-start sm:justify-center" : "justify-start"}`}
+          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-[#e2cec4] transition hover:bg-[#5b3429] hover:text-white ${collapsed ? "justify-start sm:justify-center" : "justify-start"}`}
         >
           {theme === "dark" ? (
             <Sun className="h-5 w-5" />
@@ -240,7 +240,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={onSettings}
-          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-slate-700 transition hover:bg-zinc-800 hover:text-white ${collapsed ? "justify-start sm:justify-center" : "justify-start"}`}
+          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-[#e2cec4] transition hover:bg-[#5b3429] hover:text-white ${collapsed ? "justify-start sm:justify-center" : "justify-start"}`}
         >
           <Settings className="h-5 w-5" />
           <span className={collapsed ? "inline sm:hidden" : "inline"}>
@@ -250,7 +250,7 @@ export function Sidebar({
         <button
           type="button"
           onClick={onLogout}
-          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-rose-400 transition hover:bg-rose-950/40 ${collapsed ? "justify-start sm:justify-center" : "justify-start"}`}
+          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-rose-300 transition hover:bg-rose-950/40 ${collapsed ? "justify-start sm:justify-center" : "justify-start"}`}
         >
           <LogOut className="h-5 w-5" />
           <span className={collapsed ? "inline sm:hidden" : "inline"}>

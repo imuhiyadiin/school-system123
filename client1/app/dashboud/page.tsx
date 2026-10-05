@@ -311,21 +311,21 @@ export default function DashboardPage() {
       <aside
         id="dashboard-navigation"
         aria-label="Dashboard navigation"
-        className={`fixed inset-y-3 left-3 z-40 flex w-[min(18rem,calc(100vw-1.5rem))] flex-col overflow-y-auto rounded-2xl border border-slate-200 bg-white px-3 py-4 shadow-xl transition-transform duration-200 sm:inset-y-0 sm:left-0 sm:w-72 sm:translate-x-0 sm:rounded-none sm:border-y-0 sm:border-l-0 sm:border-r sm:px-3 sm:py-5 sm:shadow-none ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-[calc(100%+0.75rem)]"}`}
+        className={`fixed inset-y-3 left-3 z-40 flex w-[min(18rem,calc(100vw-1.5rem))] flex-col overflow-y-auto rounded-2xl border border-[#684034] bg-[#48271f] px-3 py-4 text-amber-50 shadow-xl transition-transform duration-200 sm:inset-y-0 sm:left-0 sm:w-72 sm:translate-x-0 sm:rounded-none sm:border-y-0 sm:border-l-0 sm:border-r sm:px-3 sm:py-5 sm:shadow-none ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-[calc(100%+0.75rem)]"}`}
       >
         <div className="flex items-center gap-3 px-1 sm:px-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-800 text-violet-300 shadow-lg shadow-black/30 ring-1 ring-zinc-700">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#5b3429] text-amber-100 shadow-lg shadow-black/30 ring-1 ring-[#75493b]">
             <BookOpen className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm leading-tight font-bold">Creative Readers</p>
-            <p className="text-xs text-slate-500">School Management</p>
+            <p className="text-xs text-[#c2a294]">School Management</p>
           </div>
           <button
             type="button"
             onClick={() => setIsMobileSidebarOpen(false)}
             aria-label="Close dashboard menu"
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 sm:hidden"
+            className="rounded-lg p-2 text-[#d6b8a9] hover:bg-[#5b3429] sm:hidden"
           >
             <X aria-hidden="true" className="h-4 w-4" />
           </button>
@@ -343,7 +343,7 @@ export default function DashboardPage() {
             return (
               <div key={item.label} className={title ? "pt-4 first:pt-0" : ""}>
                 {title && (
-                  <p className="px-3 pb-2 text-sm font-medium text-slate-500">
+                  <p className="px-3 pb-2 text-sm font-medium text-[#bd9b8c]">
                     {title}
                   </p>
                 )}
@@ -358,7 +358,7 @@ export default function DashboardPage() {
                     }
                     navigate(item.href)
                   }}
-                  className={`flex w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition sm:text-base ${item.label === "Dashboard" ? "bg-zinc-800 text-white shadow-sm ring-1 ring-zinc-700" : "text-slate-700 hover:bg-zinc-800 hover:text-white"}`}
+                  className={`flex w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition sm:text-base ${item.label === "Dashboard" ? "bg-[#633b30] text-amber-50 shadow-sm ring-1 ring-[#75493b]" : "text-[#e2cec4] hover:bg-[#5b3429] hover:text-white"}`}
                 >
                   <Icon className="h-5 w-5 shrink-0" />
                   <span>{item.label}</span>
@@ -369,12 +369,12 @@ export default function DashboardPage() {
                   )}
                 </button>
                 {children.length > 0 && expandedSidebarItems[item.label] && (
-                    <div className="relative mt-1 ml-7 space-y-1 border-l border-slate-200 pl-3">
+                    <div className="relative mt-1 ml-7 space-y-1 border-l border-[#765044] pl-3">
                     {children.map((child) => (
                         <button
                           key={child.href}
                           onClick={() => navigate(child.href)}
-                          className="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 transition hover:bg-zinc-800 hover:text-white"
+                          className="block w-full rounded-md px-3 py-2 text-left text-sm text-[#d8c0b5] transition hover:bg-[#5b3429] hover:text-white"
                         >
                           {child.label}
                         </button>
@@ -385,7 +385,7 @@ export default function DashboardPage() {
             )
           })}
           <div className="pt-5">
-            <p className="px-3 pb-2 text-xs font-semibold tracking-[0.16em] text-slate-400 uppercase">
+            <p className="px-3 pb-2 text-xs font-semibold tracking-[0.16em] text-[#bd9b8c] uppercase">
               Account
             </p>
             {accountNavigation.map((item) => {
@@ -407,7 +407,7 @@ export default function DashboardPage() {
                       }
                       navigate(item.href)
                     }}
-                    className="flex w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-zinc-800 hover:text-white"
+                    className="flex w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#e2cec4] transition hover:bg-[#5b3429] hover:text-white"
                   >
                     <Icon className="h-4.5 w-4.5 shrink-0" />
                     <span>{item.label}</span>
@@ -418,12 +418,12 @@ export default function DashboardPage() {
                     )}
                   </button>
                   {children.length > 0 && expandedSidebarItems[item.label] && (
-                    <div className="relative mt-1 ml-7 space-y-1 border-l border-slate-200 pl-3">
+                    <div className="relative mt-1 ml-7 space-y-1 border-l border-[#765044] pl-3">
                       {children.map((child) => (
                         <button
                           key={child.href}
                           onClick={() => navigate(child.href)}
-                          className="block w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 transition hover:bg-zinc-800 hover:text-white"
+                          className="block w-full rounded-md px-3 py-2 text-left text-sm text-[#d8c0b5] transition hover:bg-[#5b3429] hover:text-white"
                         >
                           {child.label}
                         </button>
@@ -435,14 +435,14 @@ export default function DashboardPage() {
             })}
             <button
               onClick={() => navigate("/dashboud/settings")}
-              className="flex w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-zinc-800 hover:text-white"
+              className="flex w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-[#e2cec4] transition hover:bg-[#5b3429] hover:text-white"
             >
               <Settings className="h-4.5 w-4.5 shrink-0" />
               <span>Settings</span>
             </button>
             <button
               onClick={logout}
-              className="flex w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-400 transition hover:bg-rose-950/40"
+              className="flex w-full justify-start gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-300 transition hover:bg-rose-950/40"
             >
               <LogOut className="h-4.5 w-4.5 shrink-0" />
               <span>Logout</span>
