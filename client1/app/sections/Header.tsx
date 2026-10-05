@@ -64,7 +64,7 @@ const Header = () => {
   return (
     <>
     <header className={isHomePage
-      ? "fixed inset-x-0 top-0 z-50 rounded-b-[24px] border border-teal-100/90 bg-white/90 shadow-lg shadow-teal-950/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/90 dark:shadow-black/20 sm:rounded-b-[30px]"
+      ? "fixed inset-x-0 top-0 z-50 rounded-b-[24px] border border-teal-200/80 bg-[#e8f6f5]/95 shadow-lg shadow-teal-950/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/90 dark:shadow-black/20 sm:rounded-b-[30px]"
       : "fixed inset-x-0 top-0 z-50 rounded-b-2xl border border-white/70 bg-white/80 shadow-lg shadow-slate-900/5 backdrop-blur-xl transition-colors dark:border-slate-700/80 dark:bg-slate-950/85 dark:shadow-black/20"}>
       <div className={`mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 ${isHomePage ? "h-16 max-w-[1600px] sm:h-24 sm:px-8 lg:px-12" : "h-16 max-w-7xl"}`}>
         <Link

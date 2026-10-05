@@ -4,12 +4,12 @@ import Link from "next/link"
 
 export default function Page() {
   return (
-    <main id="home" className="relative flex min-h-[calc(100svh-4.5rem)] items-center justify-center overflow-hidden bg-[linear-gradient(rgba(3,18,36,0.64),rgba(3,18,36,0.78)),url('/images/home-night-lake.jpg')] bg-cover bg-center bg-fixed px-4 py-12 sm:px-6 lg:px-8">
-      <div className="absolute -left-24 top-12 h-72 w-72 rounded-full bg-blue-400/25 blur-3xl" />
-      <div className="absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-emerald-400/25 blur-3xl" />
+    <main id="home" className="relative flex min-h-[calc(100svh-4.5rem)] items-center justify-center overflow-hidden bg-[linear-gradient(135deg,#e8f6f5_0%,#f6fbfa_48%,#edf6f5_100%)] px-4 py-12 sm:px-6 lg:px-8">
+      <div className="absolute -left-24 top-12 h-72 w-72 rounded-full bg-teal-200/35 blur-3xl" />
+      <div className="absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-cyan-200/35 blur-3xl" />
 
-      <section className="relative w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/20 bg-slate-950/35 p-6 shadow-[0_30px_90px_-35px_rgba(0,0,0,0.75)] backdrop-blur-sm sm:p-10 lg:p-12">
-        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-blue-600 via-sky-500 to-emerald-500" />
+      <section className="relative w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/90 bg-white/85 p-6 shadow-[0_30px_90px_-35px_rgba(15,78,74,0.2)] backdrop-blur-sm sm:p-10 lg:p-12">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-cyan-600 via-teal-500 to-emerald-400" />
         <div className="mx-auto flex max-w-3xl animate-in fade-in slide-in-from-bottom-4 flex-col items-center text-center duration-700">
           <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-[1.65rem] bg-gradient-to-br from-blue-700 via-blue-600 to-emerald-500 text-white shadow-xl shadow-blue-500/30 ring-8 ring-blue-50 sm:h-24 sm:w-24">
             <BookOpen className="h-10 w-10 sm:h-12 sm:w-12" strokeWidth={1.8} />
@@ -18,10 +18,10 @@ export default function Page() {
           <p className="mb-3 rounded-full bg-emerald-50 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-emerald-700 ring-1 ring-emerald-100 sm:text-sm">
             Creative Readers Publication
           </p>
-          <h1 className="max-w-4xl text-3xl font-extrabold tracking-tight text-white drop-shadow-lg sm:text-4xl lg:text-5xl lg:leading-[1.08]">
+          <h1 className="max-w-4xl text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl lg:leading-[1.08]">
             Welcome to Creative Readers Publication School Management System
           </h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-slate-100 sm:text-lg sm:leading-8">
+          <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg sm:leading-8">
             A simple, secure space that brings students, teachers, and guests together for a better learning experience.
           </p>
         </div>
