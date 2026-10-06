@@ -807,6 +807,27 @@ export function CrudPage({
       setError("Unable to update selected students.")
     }
   }
+  const updateManyStudentStatuses = async (
+    ids: string[],
+    status: "ACTIVE" | "INACTIVE" | "GRADUATED"
+  ) => {
+    setError(null)
+    try {
+      const results = await Promise.allSettled(
+        ids.map((id) => apiClient.patch(`${endpoint}/${id}`, { status }))
+      )
+      const failed = results.filter((result) => result.status === "rejected").length
+      setMessage(
+        failed
+          ? `${ids.length - failed} student(s) updated; ${failed} could not be updated.`
+          : `${ids.length} student(s) marked ${status.toLowerCase()}.`
+      )
+      if (failed) setError("Some selected students could not be updated.")
+      await load()
+    } catch {
+      setError("Unable to update selected students.")
+    }
+  }
   // All dashboard forms share the same wide, aligned layout as the student form.
   const isStudentPage = true
   const studentTitle = title === "Students" ? "Student" : title
@@ -1285,6 +1306,11 @@ export function CrudPage({
                 endpoint === "/students"
                   ? (ids, classroomId) =>
                       void updateManyClassrooms(ids, classroomId)
+                  : undefined
+              }
+              onBulkStatusUpdate={
+                endpoint === "/students"
+                  ? (ids, status) => void updateManyStudentStatuses(ids, status)
                   : undefined
               }
               onView={

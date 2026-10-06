@@ -37,6 +37,10 @@ type DataTableProps = {
   onBulkDelete?: (ids: string[]) => void
   classroomOptions?: ClassroomOption[]
   onBulkClassUpdate?: (ids: string[], classroomId: string) => void
+  onBulkStatusUpdate?: (
+    ids: string[],
+    status: "ACTIVE" | "INACTIVE" | "GRADUATED"
+  ) => void
   onView?: (record: RecordValue) => void
 }
 
@@ -119,6 +123,7 @@ export function DataTable({
   onBulkDelete,
   classroomOptions,
   onBulkClassUpdate,
+  onBulkStatusUpdate,
   onView,
 }: DataTableProps) {
   const [query, setQuery] = useState("")
@@ -137,6 +142,9 @@ export function DataTable({
   const [studentName, setStudentName] = useState("")
   const [examType, setExamType] = useState("All exam types")
   const [newClassroomId, setNewClassroomId] = useState("")
+  const [newStudentStatus, setNewStudentStatus] = useState<
+    "" | "ACTIVE" | "INACTIVE" | "GRADUATED"
+  >("")
   const [page, setPage] = useState(1)
   const pageSize = 10
   const classrooms = useMemo(
@@ -294,6 +302,12 @@ export function DataTable({
       setSelected(new Set())
       setNewClassroomId("")
     }
+  }
+  const updateSelectedStudentStatus = () => {
+    if (!selected.size || !newStudentStatus) return
+    onBulkStatusUpdate?.([...selected], newStudentStatus)
+    setSelected(new Set())
+    setNewStudentStatus("")
   }
   const resetFilters = () => {
     setQuery("")
@@ -507,6 +521,33 @@ export function DataTable({
                 className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Update class ({selected.size})
+              </button>
+            </>
+          )}
+          {onBulkStatusUpdate && selected.size > 0 && (
+            <>
+              <select
+                value={newStudentStatus}
+                onChange={(event) =>
+                  setNewStudentStatus(
+                    event.target.value as typeof newStudentStatus
+                  )
+                }
+                aria-label="Select student status"
+                className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-blue-500"
+              >
+                <option value="">Select status</option>
+                <option value="ACTIVE">Active</option>
+                <option value="INACTIVE">Inactive</option>
+                <option value="GRADUATED">Graduated</option>
+              </select>
+              <button
+                type="button"
+                disabled={!newStudentStatus}
+                onClick={updateSelectedStudentStatus}
+                className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Update status ({selected.size})
               </button>
             </>
           )}
