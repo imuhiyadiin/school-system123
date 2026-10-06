@@ -329,7 +329,7 @@ export function DataTable({
         )}
         <div className="grid gap-x-6 gap-y-5 p-6 md:grid-cols-2 xl:grid-cols-3">
           {(filterFields?.search ?? true) && (
-            <label className="block text-base font-medium text-slate-900">
+            <label className={`block text-base font-medium text-slate-900 ${filterFields?.studentStatus ? "order-1" : ""}`}>
               Search
               <span className="relative mt-2 block">
                 <Search className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -346,7 +346,7 @@ export function DataTable({
             </label>
           )}
           {(filterFields?.classroom ?? true) && (
-            <label className="block text-base font-medium text-slate-900">
+            <label className={`block text-base font-medium text-slate-900 ${filterFields?.studentStatus ? "order-3" : ""}`}>
               Classroom
               <select
                 value={classroom}
@@ -385,7 +385,7 @@ export function DataTable({
             </label>
           )}
           {filterFields?.studentId && (
-            <label className="block text-base font-medium text-slate-900">
+            <label className={`block text-base font-medium text-slate-900 ${filterFields?.studentStatus ? "order-2" : ""}`}>
               Student ID
               <span className="relative mt-2 block">
                 <Search className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -402,7 +402,7 @@ export function DataTable({
             </label>
           )}
           {filterFields?.studentStatus && (
-            <label className="block text-base font-medium text-slate-900">
+            <label className={`block text-base font-medium text-slate-900 ${filterFields?.studentStatus ? "order-4" : ""}`}>
               Student status
               <select
                 value={studentStatus}
