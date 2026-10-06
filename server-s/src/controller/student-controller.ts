@@ -122,6 +122,7 @@ export const studentLogin = async (
     const students = (await prisma.student.findMany({
       where: {
         phone: studentPhone,
+        status: "ACTIVE",
       },
       include: {
         classrooms: {
@@ -169,9 +170,10 @@ export const studentLogin = async (
 
 
 
-export const getStudents = async (_req: Request, res: Response) => {
+export const getStudents = async (req: Request, res: Response) => {
   try {
     const students = await prisma.student.findMany({
+        where: req.query.includeArchived === "true" ? {} : { status: "ACTIVE" },
         orderBy: { admissionDate: "desc" },
         include: {
           classrooms: {
@@ -272,7 +274,12 @@ export const updateStudent = async (req: Request, res: Response) => {
           studentID,
           totalFee,
           busId,
+          status,
     } = req.body;
+
+    if (status !== undefined && !["ACTIVE", "INACTIVE", "GRADUATED"].includes(status)) {
+      return res.status(400).json({ message: "Invalid student status" });
+    }
 
 
     res.json({
@@ -315,6 +322,8 @@ export const updateStudent = async (req: Request, res: Response) => {
           ...(totalFee !== undefined
             ? { totalFee: Number(totalFee) }
             : {}),
+
+          ...(status !== undefined ? { status } : {}),
 
           ...(busId !== undefined
             ? { busId: String(busId).trim() || null }

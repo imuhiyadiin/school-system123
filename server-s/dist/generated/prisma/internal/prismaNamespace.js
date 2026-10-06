@@ -217,6 +217,7 @@ exports.StudentScalarFieldEnum = {
     parentName: 'parentName',
     parentPhone: 'parentPhone',
     totalFee: 'totalFee',
+    status: 'status',
     busId: 'busId',
     admissionDate: 'admissionDate'
 };

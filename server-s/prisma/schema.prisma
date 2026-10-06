@@ -154,6 +154,7 @@ model Student {
   parentName      String?
   parentPhone     String?
   totalFee        Float    @default(0)
+  status          String   @default("ACTIVE")
   busId           String?
   bus             Bus?     @relation(fields: [busId], references: [id], onDelete: SetNull)
   admissionDate   DateTime @default(now())

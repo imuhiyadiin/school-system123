@@ -16,6 +16,7 @@ export type DataTableFilterFields = {
   search?: boolean
   classroom?: boolean
   status?: boolean
+  studentStatus?: boolean
   studentId?: boolean
   studentName?: boolean
   examType?: boolean
@@ -131,6 +132,7 @@ export function DataTable({
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [classroom, setClassroom] = useState("All Classes")
   const [status, setStatus] = useState("All statuses")
+  const [studentStatus, setStudentStatus] = useState("ACTIVE")
   const [studentId, setStudentId] = useState("")
   const [studentName, setStudentName] = useState("")
   const [examType, setExamType] = useState("All exam types")
@@ -212,6 +214,7 @@ export function DataTable({
           return (
             matchesClassroom &&
             (status === "All statuses" || String(record.status) === status) &&
+            (!filterFields?.studentStatus || studentStatus === "All student statuses" || String(record.status ?? "ACTIVE") === studentStatus) &&
             matchesStudent &&
             matchesStudentId &&
             matchesExamType &&
@@ -238,6 +241,8 @@ export function DataTable({
       searchKeys,
       sort,
       status,
+      studentStatus,
+      filterFields,
       studentId,
       studentName,
     ]
@@ -294,6 +299,7 @@ export function DataTable({
     setQuery("")
     setClassroom("All Classes")
     setStatus("All statuses")
+    setStudentStatus(filterFields?.studentStatus ? "ACTIVE" : "All student statuses")
     setStudentId("")
     setStudentName("")
     setExamType("All exam types")
@@ -393,6 +399,24 @@ export function DataTable({
                   className="h-14 w-full rounded-xl border border-slate-200 pl-12 text-base transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
                 />
               </span>
+            </label>
+          )}
+          {filterFields?.studentStatus && (
+            <label className="block text-base font-medium text-slate-900">
+              Student status
+              <select
+                value={studentStatus}
+                onChange={(event) => {
+                  setStudentStatus(event.target.value)
+                  setPage(1)
+                }}
+                className="mt-2 h-14 w-full rounded-xl border border-slate-200 bg-white px-4 text-base transition outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10"
+              >
+                <option value="ACTIVE">Active students</option>
+                <option value="INACTIVE">Inactive students</option>
+                <option value="GRADUATED">Graduated students</option>
+                <option value="All student statuses">All students</option>
+              </select>
             </label>
           )}
           {filterFields?.studentName && (

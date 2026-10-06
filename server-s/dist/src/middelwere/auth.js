@@ -122,7 +122,7 @@ const requireOwnStudent = (req, res, next) => __awaiter(void 0, void 0, void 0, 
     try {
         const requestedId = String((_a = req.params.studentId) !== null && _a !== void 0 ? _a : req.params.id);
         const student = yield prisma_1.default.student.findUnique({ where: { id: (_b = req.user) === null || _b === void 0 ? void 0 : _b.id } });
-        if (!student || requestedId !== student.id) {
+        if (!student || requestedId !== student.id || student.status !== "ACTIVE") {
             return res.status(403).json({ message: "You are not authorized to access this student record" });
         }
         next();

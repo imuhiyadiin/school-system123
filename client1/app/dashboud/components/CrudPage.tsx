@@ -97,6 +97,12 @@ const fields: Record<string, Field[]> = {
       options: "/bus",
     },
     { name: "totalFee", label: "Total fee", type: "number", required: true },
+    {
+      name: "studentStatus",
+      label: "Student status",
+      type: "select",
+      values: ["ACTIVE", "INACTIVE", "GRADUATED"],
+    },
   ],
   "/bus": [
     { name: "fullName", label: "Full name", required: true },
@@ -428,6 +434,27 @@ export function CrudPage({
         ? [
             ...baseStats,
             {
+              label: "Active Students",
+              value: records.filter((record) => (record.status ?? "ACTIVE") === "ACTIVE").length,
+              tone: "emerald",
+              icon: GraduationCap,
+              detail: "Currently enrolled",
+            },
+            {
+              label: "Inactive Students",
+              value: records.filter((record) => record.status === "INACTIVE").length,
+              tone: "amber",
+              icon: UserRound,
+              detail: "No longer attending",
+            },
+            {
+              label: "Graduated Students",
+              value: records.filter((record) => record.status === "GRADUATED").length,
+              tone: "indigo",
+              icon: GraduationCap,
+              detail: "Completed their studies",
+            },
+            {
               label: "Students with Bus",
               value: records.filter((record) => Boolean(record.busId)).length,
               tone: "emerald",
@@ -492,7 +519,9 @@ export function CrudPage({
       formFields
         .filter((field) => field.type !== "password")
         .map((field) =>
-          field.name === "classroomId" && endpoint === "/students"
+          field.name === "studentStatus" && endpoint === "/students"
+            ? { key: "status", label: "Student status" }
+            : field.name === "classroomId" && endpoint === "/students"
             ? { key: "classrooms", label: "Classroom" }
             : field.name === "busId" && endpoint === "/students"
               ? { key: "bus", label: "Student bus" }
@@ -521,7 +550,12 @@ export function CrudPage({
     setLoading(true)
     setError(null)
     try {
-      const { data } = await apiClient.get(endpoint)
+      const { data } = await apiClient.get(
+        endpoint,
+        endpoint === "/students"
+          ? { params: { includeArchived: true } }
+          : undefined
+      )
       const value = Array.isArray(data)
         ? data
         : (data?.[unwrap] ??
@@ -594,6 +628,10 @@ export function CrudPage({
     }
     try {
       const data = { ...values }
+      if (endpoint === "/students" && editingId) {
+        data.status = String(values.studentStatus ?? "ACTIVE")
+        delete data.studentStatus
+      }
       if (endpoint === "/exam" && editingId) {
         data.subjectId = Array.isArray(values.subjectId)
           ? values.subjectId[0] ?? ""
@@ -677,6 +715,8 @@ export function CrudPage({
               ) ?? []
           : field.name === "name" && endpoint === "/user"
           ? record.username
+          : field.name === "studentStatus" && endpoint === "/students"
+            ? record.status ?? "ACTIVE"
           : field.name === "classroomId" && endpoint === "/students"
             ? studentClassrooms?.[0]?.classroomId
             : record[field.name]
@@ -932,7 +972,7 @@ export function CrudPage({
                         </h3>
                       </div>
                       <div className="grid gap-x-7 gap-y-5 md:grid-cols-2 xl:grid-cols-3">
-                    {formFields.filter((field) => field.formVisible !== false).map((field) => (
+                    {formFields.filter((field) => field.formVisible !== false && (field.name !== "studentStatus" || Boolean(editingId))).map((field) => (
                       <label
                         key={field.name}
                         className={`${isStudentPage && field.name === "address" ? "xl:col-span-3" : ""} block text-sm font-medium text-slate-800`}
@@ -1222,7 +1262,7 @@ export function CrudPage({
                 searchKeys ??
                 (endpoint === "/students" ? ["studentID"] : undefined)
               }
-              filterFields={filterFields}
+              filterFields={endpoint === "/students" ? { ...filterFields, studentStatus: true } : filterFields}
               showExport={false}
               classroomFilterKey={classroomFilterKey}
               onEdit={endpoint === "/exam" ? undefined : edit}

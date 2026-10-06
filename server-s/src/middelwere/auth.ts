@@ -109,7 +109,7 @@ export const requireOwnStudent = async (req: AuthRequest, res: Response, next: N
     try {
         const requestedId = String(req.params.studentId ?? req.params.id);
         const student = await prisma.student.findUnique({ where: { id: req.user?.id } });
-        if (!student || requestedId !== student.id) {
+        if (!student || requestedId !== student.id || student.status !== "ACTIVE") {
             return res.status(403).json({ message: "You are not authorized to access this student record" });
         }
         next();

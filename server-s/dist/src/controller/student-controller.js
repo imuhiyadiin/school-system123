@@ -97,6 +97,7 @@ const studentLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const students = (yield prisma_1.default.student.findMany({
             where: {
                 phone: studentPhone,
+                status: "ACTIVE",
             },
             include: {
                 classrooms: {
@@ -140,9 +141,10 @@ const studentLogin = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.studentLogin = studentLogin;
-const getStudents = (_req, res) => __awaiter(void 0, void 0, void 0, function* () {
+const getStudents = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const students = yield prisma_1.default.student.findMany({
+            where: req.query.includeArchived === "true" ? {} : { status: "ACTIVE" },
             orderBy: { admissionDate: "desc" },
             include: {
                 classrooms: {
@@ -225,13 +227,16 @@ const getStudentOverview = (req, res) => __awaiter(void 0, void 0, void 0, funct
 exports.getStudentOverview = getStudentOverview;
 const updateStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { fullName, gender, dob, phone, address, parentName, parentPhone, password, classroomId, studentID, totalFee, busId, } = req.body;
+        const { fullName, gender, dob, phone, address, parentName, parentPhone, password, classroomId, studentID, totalFee, busId, status, } = req.body;
+        if (status !== undefined && !["ACTIVE", "INACTIVE", "GRADUATED"].includes(status)) {
+            return res.status(400).json({ message: "Invalid student status" });
+        }
         res.json({
             student: yield prisma_1.default.student.update({
                 where: {
                     id: String(req.params.id),
                 },
-                data: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (fullName !== undefined ? { fullName } : {})), (gender !== undefined ? { gender } : {})), (dob !== undefined
+                data: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (fullName !== undefined ? { fullName } : {})), (gender !== undefined ? { gender } : {})), (dob !== undefined
                     ? { dob: new Date(dob) }
                     : {})), (phone !== undefined
                     ? { phone }
@@ -247,7 +252,7 @@ const updateStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
                     }
                     : {})), (totalFee !== undefined
                     ? { totalFee: Number(totalFee) }
-                    : {})), (busId !== undefined
+                    : {})), (status !== undefined ? { status } : {})), (busId !== undefined
                     ? { busId: String(busId).trim() || null }
                     : {})), (password
                     ? {
